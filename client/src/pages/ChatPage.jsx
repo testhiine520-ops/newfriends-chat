@@ -891,10 +891,10 @@ export default function Chat() {
                 {chatMode === "room"
                   ? currentRoom
                     ? currentRoom.description
-                    : "Зүүн талын Групп дээр дарж Групп Чат эхлүүлнэ."
+                    : ""
                   : selectedUser
                   ? canPrivateChat
-                    ? `${selectedUser}-тэй private Чат хийж байна.`
+                    ? `\n${selectedUser}-тэй private Чат хийж байна.`
                     : outgoingRequest === selectedUser
                     ? `${selectedUser} таны request-ийг зөвшөөрөхийг хүлээж байна.`
                     : onlineUsers.includes(selectedUser)
