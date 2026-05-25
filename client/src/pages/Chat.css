@@ -593,3 +593,365 @@
   font-size: 22px;
   cursor: pointer;
 }
+
+/* =========================
+   MOBILE RESPONSIVE DESIGN
+========================= */
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .chat-page {
+    flex-direction: column;
+    height: 100vh;
+    padding: 10px;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-width: none;
+    height: 38vh;
+    min-height: 300px;
+    padding: 16px;
+    border-radius: 20px;
+    box-sizing: border-box;
+  }
+
+  .sidebar h2 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .cat-row {
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+
+  .my-name-box {
+    padding: 14px 16px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+
+  .my-name-box p {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .my-name-box strong {
+    font-size: 18px;
+  }
+
+  .sidebar-scroll {
+    max-height: calc(38vh - 190px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .online-title {
+    font-size: 22px;
+    margin: 16px 0 10px;
+  }
+
+  .rooms-list,
+  .users-list {
+    gap: 10px;
+  }
+
+  .room-item,
+  .user-item,
+  .user-item-static {
+    padding: 12px 14px;
+    border-radius: 15px;
+  }
+
+  .room-top {
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .room-name {
+    font-size: 17px;
+    line-height: 1.25;
+  }
+
+  .room-count {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .room-desc {
+    font-size: 14px;
+    line-height: 1.35;
+    margin-top: 6px;
+  }
+
+  .joined-badge {
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  .create-room-box {
+    margin-top: 16px;
+  }
+
+  .create-room-title {
+    font-size: 22px;
+  }
+
+  .create-room-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .create-room-row input {
+    flex: 1;
+    min-width: 0;
+    height: 46px;
+    font-size: 15px;
+    border-radius: 14px;
+    padding: 0 14px;
+  }
+
+  .create-room-row button {
+    width: 48px;
+    height: 46px;
+    min-width: 48px;
+    border-radius: 14px;
+    font-size: 24px;
+  }
+
+  .logout-btn {
+    width: 100%;
+    height: 50px;
+    border-radius: 16px;
+    font-size: 18px;
+    margin-top: 12px;
+  }
+
+  .chat-section {
+    width: 100%;
+    height: calc(62vh - 20px);
+    min-height: 420px;
+    padding: 16px;
+    border-radius: 20px;
+    box-sizing: border-box;
+  }
+
+  .chat-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  .chat-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .chat-header h1 {
+    font-size: 28px;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    word-break: break-word;
+  }
+
+  .chat-subtitle {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .status-text {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .leave-room-btn {
+    width: 100%;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+
+  .room-members {
+    gap: 6px;
+    margin-top: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .member-pill {
+    font-size: 13px;
+    padding: 7px 10px;
+    white-space: nowrap;
+  }
+
+  .messages-box {
+    height: calc(100% - 150px);
+    min-height: 230px;
+    padding: 14px;
+    border-radius: 18px;
+    overflow-y: auto;
+  }
+
+  .message-row {
+    margin-bottom: 10px;
+  }
+
+  .message-bubble {
+    max-width: 86%;
+    font-size: 15px;
+    line-height: 1.35;
+    padding: 10px 12px;
+    border-radius: 14px;
+    word-break: break-word;
+  }
+
+  .my-message {
+    justify-content: flex-end;
+  }
+
+  .their-message {
+    justify-content: flex-start;
+  }
+
+  .system-message {
+    font-size: 13px;
+    line-height: 1.35;
+    margin: 8px 0;
+    text-align: center;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .message-input-row {
+    display: grid;
+    grid-template-columns: 1fr 48px 48px;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .message-input-row input {
+    grid-column: 1 / 4;
+    height: 48px;
+    font-size: 15px;
+    border-radius: 14px;
+    padding: 0 14px;
+  }
+
+  .media-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 20px;
+  }
+
+  .send-btn {
+    grid-column: 3 / 4;
+    width: 100%;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 15px;
+    padding: 0;
+  }
+
+  .chat-image {
+    max-width: 180px;
+    border-radius: 12px;
+  }
+
+  .chat-audio {
+    max-width: 190px;
+  }
+
+  .request-box {
+    padding: 14px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+
+  .request-box p {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .request-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .accept-btn,
+  .reject-btn {
+    flex: 1;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+}
+
+/* =========================
+   VERY SMALL PHONES
+========================= */
+
+@media (max-width: 420px) {
+  .chat-page {
+    padding: 8px;
+  }
+
+  .sidebar {
+    height: 36vh;
+    min-height: 280px;
+    padding: 14px;
+  }
+
+  .chat-section {
+    height: calc(64vh - 16px);
+    padding: 14px;
+  }
+
+  .sidebar h2 {
+    font-size: 20px;
+  }
+
+  .online-title {
+    font-size: 20px;
+  }
+
+  .room-name {
+    font-size: 16px;
+  }
+
+  .room-desc {
+    font-size: 13px;
+  }
+
+  .chat-header h1 {
+    font-size: 24px;
+  }
+
+  .chat-subtitle {
+    font-size: 14px;
+  }
+
+  .messages-box {
+    height: calc(100% - 145px);
+    min-height: 210px;
+  }
+
+  .message-bubble {
+    max-width: 90%;
+    font-size: 14px;
+  }
+
+  .send-btn {
+    font-size: 14px;
+  }
+}
