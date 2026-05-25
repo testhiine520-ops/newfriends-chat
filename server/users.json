@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1779682105985-4xcm3cacnvr",
+    "username": "qwerty",
+    "salt": "ea0c47acdf1f8c263d8c4810f8886f47",
+    "passwordHash": "5292e63ac47e8fdea5673aaff8f8f34fc80eaa1f8969ee7d32b344dd9a32ad56",
+    "recentChats": [
+      "dorj"
+    ],
+    "createdAt": "2026-05-25T04:08:25.985Z",
+    "lastChatAt": "2026-05-25T04:47:52.293Z"
+  },
+  {
+    "id": "1779682150371-sw5ihe5yx1",
+    "username": "dorj",
+    "salt": "49a7b1c1fd9c6afbce02c861e5f3666b",
+    "passwordHash": "c29a28c568af0b8e7d39609c0b75cb1cc7c5577f6d0c88912a636c7af8eb1a87",
+    "recentChats": [
+      "qwerty"
+    ],
+    "createdAt": "2026-05-25T04:09:10.371Z",
+    "lastChatAt": "2026-05-25T04:47:52.293Z"
+  }
+]
