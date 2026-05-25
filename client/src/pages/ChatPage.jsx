@@ -37,8 +37,7 @@ export default function Chat() {
   const [privateMessages, setPrivateMessages] = useState({});
 
   const [chatMode, setChatMode] = useState("room");
-  const [showRecentChats, setShowRecentChats] = useState(true);
-  const [showOnlineUsers, setShowOnlineUsers] = useState(true);
+  const [mobileTab, setMobileTab] = useState("groups");
 
   const [message, setMessage] = useState("");
   const [statusText, setStatusText] = useState("");
@@ -125,6 +124,7 @@ export default function Chat() {
       setSelectedRoom(room.id);
       setSelectedUser(null);
       setChatMode("room");
+      setMobileTab("chat");
 
       setJoinedRooms((prev) =>
         prev.includes(room.id) ? prev : [...prev, room.id]
@@ -178,6 +178,7 @@ export default function Chat() {
       setChatMode("private");
       setSelectedUser(from);
       setSelectedRoom(null);
+      setMobileTab("chat");
       setStatusText(`${from} танд chat request илгээлээ.`);
     });
 
@@ -189,6 +190,7 @@ export default function Chat() {
         setSelectedUser(otherUser);
         setSelectedRoom(null);
         setChatMode("private");
+        setMobileTab("chat");
         setOutgoingRequest(null);
         setIncomingRequest(null);
         setStatusText(`${otherUser}-тэй чат эхэллээ.`);
@@ -207,6 +209,7 @@ export default function Chat() {
       setSelectedUser(otherUser);
       setSelectedRoom(null);
       setChatMode("private");
+      setMobileTab("chat");
       setOutgoingRequest(null);
       setIncomingRequest(null);
       setStatusText(`${otherUser}-тэй чат эхэллээ.`);
@@ -242,6 +245,7 @@ export default function Chat() {
       setSelectedUser(username);
       setSelectedRoom(null);
       setChatMode("private");
+      setMobileTab("chat");
       setStatusText(text);
     });
 
@@ -299,6 +303,7 @@ export default function Chat() {
     setSelectedRoom(roomId);
     setSelectedUser(null);
     setMessage("");
+    setMobileTab("chat");
 
     if (!joinedRooms.includes(roomId)) {
       setJoinedRooms((prev) => [...prev, roomId]);
@@ -327,6 +332,7 @@ export default function Chat() {
     setSelectedUser(user);
     setSelectedRoom(null);
     setMessage("");
+    setMobileTab("chat");
 
     if (activeChatUser === user) {
       setStatusText(`${user}-тэй чатлаж байна.`);
@@ -366,6 +372,7 @@ export default function Chat() {
       setSelectedUser(incomingRequest.from);
       setSelectedRoom(null);
       setChatMode("private");
+      setMobileTab("chat");
       setStatusText(`${incomingRequest.from}-тэй чат эхэллээ.`);
       loadRecentChats(myName);
     } else {
@@ -557,7 +564,6 @@ export default function Chat() {
               })
             )}
           </div>
-        </div>
 
           <div className="create-room-box">
             <h3 className="online-title create-room-title">
@@ -580,104 +586,266 @@ export default function Chat() {
           </div>
 
           <div className="folder-section">
-  <button
-    type="button"
-    className="folder-header"
-    onClick={() => setShowRecentChats((prev) => !prev)}
-  >
-    <span className={`folder-arrow ${showRecentChats ? "open" : ""}`}>
-      ›
-    </span>
-
-    <span className="folder-title">Өмнөх чатнууд</span>
-
-    <span className="folder-count">{recentChats.length}</span>
-  </button>
-
-  {showRecentChats && (
-    <div className="folder-content">
-      {recentChats.length === 0 ? (
-        <div className="folder-empty">Одоогоор өмнөх чат алга</div>
-      ) : (
-        recentChats.map((user) => (
-          <button
-            key={user}
-            className={`folder-user-item ${
-              chatMode === "private" && selectedUser === user
-                ? "active-folder-user"
-                : ""
-            }`}
-            onClick={() => handleUserClick(user)}
-          >
-            <span className="folder-user-icon">💬</span>
-
-            <span className="folder-user-name">{user}</span>
-
-            <span
-              className={`folder-user-status ${
-                onlineUsers.includes(user) ? "online" : "offline"
-              }`}
+            <button
+              type="button"
+              className="folder-header"
+              onClick={() =>
+                setMobileTab((prev) => (prev === "recent" ? "chat" : "recent"))
+              }
             >
-              {onlineUsers.includes(user) ? "online" : "offline"}
-            </span>
-          </button>
-        ))
-      )}
-    </div>
-  )}
-</div>
+              <span
+                className={`folder-arrow ${
+                  mobileTab === "recent" ? "open" : ""
+                }`}
+              >
+                ›
+              </span>
+
+              <span className="folder-title">Өмнөх чатнууд</span>
+
+              <span className="folder-count">{recentChats.length}</span>
+            </button>
+
+            {mobileTab === "recent" && (
+              <div className="folder-content">
+                {recentChats.length === 0 ? (
+                  <div className="folder-empty">Одоогоор өмнөх чат алга</div>
+                ) : (
+                  recentChats.map((user) => (
+                    <button
+                      key={user}
+                      className={`folder-user-item ${
+                        chatMode === "private" && selectedUser === user
+                          ? "active-folder-user"
+                          : ""
+                      }`}
+                      onClick={() => handleUserClick(user)}
+                    >
+                      <span className="folder-user-icon">💬</span>
+
+                      <span className="folder-user-name">{user}</span>
+
+                      <span
+                        className={`folder-user-status ${
+                          onlineUsers.includes(user) ? "online" : "offline"
+                        }`}
+                      >
+                        {onlineUsers.includes(user) ? "online" : "offline"}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="folder-section">
-  <button
-    type="button"
-    className="folder-header"
-    onClick={() => setShowOnlineUsers((prev) => !prev)}
-  >
-    <span className={`folder-arrow ${showOnlineUsers ? "open" : ""}`}>
-      ›
-    </span>
+            <button
+              type="button"
+              className="folder-header"
+              onClick={() =>
+                setMobileTab((prev) => (prev === "users" ? "chat" : "users"))
+              }
+            >
+              <span
+                className={`folder-arrow ${
+                  mobileTab === "users" ? "open" : ""
+                }`}
+              >
+                ›
+              </span>
 
-    <span className="folder-title">Online users</span>
+              <span className="folder-title">Online users</span>
 
-    <span className="folder-count">{onlineUsers.length}</span>
-  </button>
+              <span className="folder-count">{onlineUsers.length}</span>
+            </button>
 
-  {showOnlineUsers && (
-    <div className="folder-content">
-      {onlineUsers.length === 0 ? (
-        <div className="folder-empty">Одоогоор online хүн алга</div>
-      ) : (
-        onlineUsers.map((user) => (
-          <button
-            key={user}
-            className={`folder-user-item ${
-              chatMode === "private" && selectedUser === user
-                ? "active-folder-user"
-                : ""
-            }`}
-            onClick={() => handleUserClick(user)}
-          >
-            <span className="folder-user-icon">👤</span>
+            {mobileTab === "users" && (
+              <div className="folder-content">
+                {onlineUsers.length === 0 ? (
+                  <div className="folder-empty">Одоогоор online хүн алга</div>
+                ) : (
+                  onlineUsers.map((user) => (
+                    <button
+                      key={user}
+                      className={`folder-user-item ${
+                        chatMode === "private" && selectedUser === user
+                          ? "active-folder-user"
+                          : ""
+                      }`}
+                      onClick={() => handleUserClick(user)}
+                    >
+                      <span className="folder-user-icon">👤</span>
 
-            <span className="folder-user-name">{user}</span>
+                      <span className="folder-user-name">{user}</span>
 
-            {activeChatUser === user ? (
-              <span className="folder-user-status chatting">chat</span>
-            ) : outgoingRequest === user ? (
-              <span className="folder-user-status request">request</span>
-            ) : (
-              <span className="folder-user-status online">online</span>
+                      {activeChatUser === user ? (
+                        <span className="folder-user-status chatting">
+                          chat
+                        </span>
+                      ) : outgoingRequest === user ? (
+                        <span className="folder-user-status request">
+                          request
+                        </span>
+                      ) : (
+                        <span className="folder-user-status online">
+                          online
+                        </span>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
             )}
-          </button>
-        ))
-      )}
-    </div>
-  )}
-</div>
+          </div>
+        </div>
 
         <button className="logout-btn" onClick={handleLogout}>
           Гарах
         </button>
+      </div>
+
+      {/* MOBILE TAB PANEL */}
+      <div className="mobile-panel">
+        {mobileTab === "groups" && (
+          <div className="mobile-panel-content">
+            <h3>Group chats</h3>
+
+            <div className="mobile-list">
+              {rooms.length === 0 ? (
+                <div className="mobile-empty">Room ачааллаж байна...</div>
+              ) : (
+                rooms.map((room) => {
+                  const isSelected =
+                    chatMode === "room" && selectedRoom === room.id;
+                  const isJoined = joinedRooms.includes(room.id);
+
+                  return (
+                    <button
+                      key={room.id}
+                      className={`mobile-list-item ${
+                        isSelected ? "active" : ""
+                      }`}
+                      onClick={() => handleRoomClick(room.id)}
+                    >
+                      <div>
+                        <strong>{room.name}</strong>
+                        <p>{room.description}</p>
+                        {isJoined && <span>Та энэ room-д байна</span>}
+                      </div>
+
+                      <em>{room.count} хүн</em>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+        {mobileTab === "create" && (
+          <div className="mobile-panel-content">
+            <h3>Group үүсгэх ✨</h3>
+
+            <div className="mobile-create-box">
+              <input
+                type="text"
+                placeholder="Group нэр..."
+                value={newRoomName}
+                onChange={(e) => setNewRoomName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
+              />
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleCreateRoom();
+                  setMobileTab("groups");
+                }}
+              >
+                Үүсгэх
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mobileTab === "recent" && (
+          <div className="mobile-panel-content">
+            <h3>Өмнөх чатнууд 🔁</h3>
+
+            <div className="mobile-list">
+              {recentChats.length === 0 ? (
+                <div className="mobile-empty">Одоогоор өмнөх чат алга</div>
+              ) : (
+                recentChats.map((user) => (
+                  <button
+                    key={user}
+                    className={`mobile-list-item ${
+                      chatMode === "private" && selectedUser === user
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() => handleUserClick(user)}
+                  >
+                    <div>
+                      <strong>{user}</strong>
+                      <p>
+                        {onlineUsers.includes(user)
+                          ? "online байна"
+                          : "offline байна"}
+                      </p>
+                    </div>
+
+                    <em>{onlineUsers.includes(user) ? "online" : "offline"}</em>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {mobileTab === "users" && (
+          <div className="mobile-panel-content">
+            <h3>Online users 👥</h3>
+
+            <div className="mobile-list">
+              {onlineUsers.length === 0 ? (
+                <div className="mobile-empty">Одоогоор online хүн алга</div>
+              ) : (
+                onlineUsers.map((user) => (
+                  <button
+                    key={user}
+                    className={`mobile-list-item ${
+                      chatMode === "private" && selectedUser === user
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() => handleUserClick(user)}
+                  >
+                    <div>
+                      <strong>{user}</strong>
+                      <p>
+                        {activeChatUser === user
+                          ? "чатлаж байна"
+                          : outgoingRequest === user
+                          ? "request явсан"
+                          : "request явуулах"}
+                      </p>
+                    </div>
+
+                    <em>
+                      {activeChatUser === user
+                        ? "chat"
+                        : outgoingRequest === user
+                        ? "request"
+                        : "online"}
+                    </em>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="chat-section">
@@ -869,6 +1037,54 @@ export default function Chat() {
             Илгээх
           </button>
         </div>
+      </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <div className="mobile-bottom-nav">
+        <button
+          type="button"
+          className={mobileTab === "groups" ? "active" : ""}
+          onClick={() => setMobileTab("groups")}
+        >
+          <span>💬</span>
+          <p>Group</p>
+        </button>
+
+        <button
+          type="button"
+          className={mobileTab === "users" ? "active" : ""}
+          onClick={() => setMobileTab("users")}
+        >
+          <span>👥</span>
+          <p>Users</p>
+        </button>
+
+        <button
+          type="button"
+          className={mobileTab === "chat" ? "active" : ""}
+          onClick={() => setMobileTab("chat")}
+        >
+          <span>✉️</span>
+          <p>Chat</p>
+        </button>
+
+        <button
+          type="button"
+          className={mobileTab === "recent" ? "active" : ""}
+          onClick={() => setMobileTab("recent")}
+        >
+          <span>🔁</span>
+          <p>Recent</p>
+        </button>
+
+        <button
+          type="button"
+          className={mobileTab === "create" ? "active" : ""}
+          onClick={() => setMobileTab("create")}
+        >
+          <span>＋</span>
+          <p>Create</p>
+        </button>
       </div>
     </div>
   );
