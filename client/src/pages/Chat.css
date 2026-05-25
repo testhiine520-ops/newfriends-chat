@@ -1461,3 +1461,62 @@
     color: #6dff9c;
   }
 }
+
+/* =========================
+   FIX FOLDER FONT SIZE
+========================= */
+
+.folder-header {
+  min-height: 66px !important;
+  padding: 14px 16px !important;
+  gap: 12px !important;
+}
+
+.folder-arrow {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  font-size: 28px !important;
+}
+
+.folder-title {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  word-break: normal !important;
+  white-space: normal !important;
+}
+
+.folder-count {
+  font-size: 15px !important;
+  white-space: nowrap !important;
+  margin-left: auto !important;
+}
+
+.folder-section {
+  border-radius: 18px !important;
+}
+
+/* mobile дээр бүр цэгцтэй */
+@media (max-width: 768px) {
+  .folder-header {
+    min-height: 62px !important;
+    padding: 13px 14px !important;
+  }
+
+  .folder-arrow {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    font-size: 26px !important;
+  }
+
+  .folder-title {
+    font-size: 17px !important;
+    line-height: 1.15 !important;
+  }
+
+  .folder-count {
+    font-size: 14px !important;
+  }
+}

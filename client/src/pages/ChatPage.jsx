@@ -147,7 +147,7 @@ export default function Chat() {
       });
 
       setSelectedRoom((prev) => (prev === roomId ? null : prev));
-      setStatusText(text || "Group устлаа.");
+      setStatusText(text || "Групп устлаа.");
     });
 
     socket.on("room_history", ({ roomId, messages }) => {
@@ -340,7 +340,7 @@ export default function Chat() {
     }
 
     if (!onlineUsers.includes(user)) {
-      setStatusText(`${user} одоогоор online биш байна.`);
+      setStatusText(`${user} одоогоор Онлайн биш байна.`);
       return;
     }
 
@@ -530,7 +530,7 @@ export default function Chat() {
         </div>
 
         <div className="sidebar-scroll">
-          <h3 className="online-title">Group chats 💬</h3>
+          <h3 className="online-title">Групп chats 💬</h3>
 
           <div className="rooms-list">
             {rooms.length === 0 ? (
@@ -567,13 +567,13 @@ export default function Chat() {
 
           <div className="create-room-box">
             <h3 className="online-title create-room-title">
-              Group үүсгэх ✨
+              Групп үүсгэх ✨
             </h3>
 
             <div className="create-room-row">
               <input
                 type="text"
-                placeholder="Group нэр..."
+                placeholder="Групп нэр..."
                 value={newRoomName}
                 onChange={(e) => setNewRoomName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
@@ -655,7 +655,7 @@ export default function Chat() {
                 ›
               </span>
 
-              <span className="folder-title">Online users</span>
+              <span className="folder-title">Онлайн хэрэглэгчид</span>
 
               <span className="folder-count">{onlineUsers.length}</span>
             </button>
@@ -663,7 +663,7 @@ export default function Chat() {
             {mobileTab === "users" && (
               <div className="folder-content">
                 {onlineUsers.length === 0 ? (
-                  <div className="folder-empty">Одоогоор online хүн алга</div>
+                  <div className="folder-empty">Одоогоор Онлайн хүн алга</div>
                 ) : (
                   onlineUsers.map((user) => (
                     <button
@@ -709,7 +709,7 @@ export default function Chat() {
       <div className="mobile-panel">
         {mobileTab === "groups" && (
           <div className="mobile-panel-content">
-            <h3>Group chats</h3>
+            <h3>Групп chats</h3>
 
             <div className="mobile-list">
               {rooms.length === 0 ? (
@@ -745,12 +745,12 @@ export default function Chat() {
 
         {mobileTab === "create" && (
           <div className="mobile-panel-content">
-            <h3>Group үүсгэх ✨</h3>
+            <h3>Групп үүсгэх ✨</h3>
 
             <div className="mobile-create-box">
               <input
                 type="text"
-                placeholder="Group нэр..."
+                placeholder="Групп нэр..."
                 value={newRoomName}
                 onChange={(e) => setNewRoomName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
@@ -791,7 +791,7 @@ export default function Chat() {
                       <strong>{user}</strong>
                       <p>
                         {onlineUsers.includes(user)
-                          ? "online байна"
+                          ? "Онлайн байна"
                           : "offline байна"}
                       </p>
                     </div>
@@ -810,7 +810,7 @@ export default function Chat() {
 
             <div className="mobile-list">
               {onlineUsers.length === 0 ? (
-                <div className="mobile-empty">Одоогоор online хүн алга</div>
+                <div className="mobile-empty">Одоогоор Онлайн хэрэглэгчид алга</div>
               ) : (
                 onlineUsers.map((user) => (
                   <button
@@ -881,7 +881,7 @@ export default function Chat() {
                 {chatMode === "room"
                   ? currentRoom
                     ? currentRoom.name
-                    : "Group chat сонгоно уу"
+                    : "Групп chat сонгоно уу"
                   : selectedUser
                   ? selectedUser
                   : "Хэрэглэгч сонгоно уу"}
@@ -891,16 +891,16 @@ export default function Chat() {
                 {chatMode === "room"
                   ? currentRoom
                     ? currentRoom.description
-                    : "Зүүн талын group дээр дарж group chat эхлүүлнэ."
+                    : "Зүүн талын Групп дээр дарж Групп Чат эхлүүлнэ."
                   : selectedUser
                   ? canPrivateChat
-                    ? `${selectedUser}-тэй private chat хийж байна.`
+                    ? `${selectedUser}-тэй private Чат хийж байна.`
                     : outgoingRequest === selectedUser
                     ? `${selectedUser} таны request-ийг зөвшөөрөхийг хүлээж байна.`
                     : onlineUsers.includes(selectedUser)
-                    ? "Online user дээр дарж request явуулна."
+                    ? "Онлайн хэрэглэгчид дээр дарж request явуулна."
                     : "Энэ хэрэглэгч одоогоор offline байна."
-                  : "Online users дээр дарж private chat эхлүүлнэ."}
+                  : "Онлайн хэрэглэгчид дээр дарж private Чат эхлүүлнэ."}
               </p>
 
               {statusText && <p className="status-text">{statusText}</p>}
@@ -989,8 +989,8 @@ export default function Chat() {
               canChat
                 ? "Энд мессежээ бичнэ..."
                 : chatMode === "room"
-                ? "Мессеж бичихийн тулд group room-д орно уу."
-                : "Private chat эхлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
+                ? "Мессеж бичихийн тулд Групп room-д орно уу."
+                : "Private Чат эхлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
             }
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -1047,7 +1047,7 @@ export default function Chat() {
           onClick={() => setMobileTab("groups")}
         >
           <span>💬</span>
-          <p>Group</p>
+          <p>Групп</p>
         </button>
 
         <button
@@ -1074,7 +1074,7 @@ export default function Chat() {
           onClick={() => setMobileTab("recent")}
         >
           <span>🔁</span>
-          <p>Recent</p>
+          <p>Өмнөх</p>
         </button>
 
         <button
@@ -1083,7 +1083,7 @@ export default function Chat() {
           onClick={() => setMobileTab("create")}
         >
           <span>＋</span>
-          <p>Create</p>
+          <p>Үүсгэх</p>
         </button>
       </div>
     </div>
