@@ -955,3 +955,186 @@
     font-size: 14px;
   }
 }
+
+/* =========================
+   FOLDER STYLE FOR USERS
+========================= */
+
+.folder-section {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid #2a5d95;
+  border-radius: 18px;
+  background: #10243d;
+  overflow: hidden;
+}
+
+.folder-header {
+  width: 100%;
+  min-height: 62px;
+  border: none;
+  background: #14365f;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.folder-header:hover {
+  background: #1b4778;
+}
+
+.folder-arrow {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: #eef7ff;
+  color: #1f75bd;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: 0.2s ease;
+}
+
+.folder-arrow.open {
+  transform: rotate(90deg);
+}
+
+.folder-title {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.folder-count {
+  font-size: 14px;
+  color: #cfe5ff;
+  white-space: nowrap;
+}
+
+.folder-content {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.folder-empty {
+  padding: 14px;
+  color: #b9cbe0;
+  font-size: 15px;
+}
+
+.folder-user-item {
+  width: 100%;
+  border: 1px solid #2a5d95;
+  background: #173a66;
+  color: white;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.folder-user-item:hover {
+  background: #214d7f;
+}
+
+.active-folder-user {
+  background: #2f6faf;
+  border-color: #8fc4ff;
+}
+
+.folder-user-icon {
+  font-size: 18px;
+}
+
+.folder-user-name {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-user-status {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.folder-user-status.online {
+  color: #10243d;
+  background: #6dff9c;
+}
+
+.folder-user-status.offline {
+  color: white;
+  background: #6b7280;
+}
+
+.folder-user-status.chatting {
+  color: #10243d;
+  background: #ffd36b;
+}
+
+.folder-user-status.request {
+  color: white;
+  background: #f59e0b;
+}
+
+/* mobile дээр folder арай жижиг */
+@media (max-width: 768px) {
+  .folder-section {
+    margin-top: 14px;
+    border-radius: 16px;
+  }
+
+  .folder-header {
+    min-height: 56px;
+    padding: 12px 14px;
+  }
+
+  .folder-arrow {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    font-size: 26px;
+  }
+
+  .folder-title {
+    font-size: 19px;
+  }
+
+  .folder-content {
+    padding: 10px;
+  }
+
+  .folder-user-item {
+    padding: 11px 12px;
+  }
+
+  .folder-user-name {
+    font-size: 15px;
+  }
+
+  .folder-user-status {
+    font-size: 11px;
+  }
+}

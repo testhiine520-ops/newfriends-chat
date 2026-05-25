@@ -37,6 +37,8 @@ export default function Chat() {
   const [privateMessages, setPrivateMessages] = useState({});
 
   const [chatMode, setChatMode] = useState("room");
+  const [showRecentChats, setShowRecentChats] = useState(true);
+  const [showOnlineUsers, setShowOnlineUsers] = useState(true);
 
   const [message, setMessage] = useState("");
   const [statusText, setStatusText] = useState("");
@@ -555,6 +557,7 @@ export default function Chat() {
               })
             )}
           </div>
+        </div>
 
           <div className="create-room-box">
             <h3 className="online-title create-room-title">
@@ -576,61 +579,101 @@ export default function Chat() {
             </div>
           </div>
 
-          {recentChats.length > 0 && (
-            <>
-              <h3 className="online-title users-title">Өмнөх чатнууд 🔁</h3>
+          <div className="folder-section">
+  <button
+    type="button"
+    className="folder-header"
+    onClick={() => setShowRecentChats((prev) => !prev)}
+  >
+    <span className={`folder-arrow ${showRecentChats ? "open" : ""}`}>
+      ›
+    </span>
 
-              <div className="users-list">
-                {recentChats.map((user) => (
-                  <button
-                    key={user}
-                    className={`user-item ${
-                      chatMode === "private" && selectedUser === user
-                        ? "active-user"
-                        : ""
-                    }`}
-                    onClick={() => handleUserClick(user)}
-                  >
-                    <span>{user}</span>
-                    <span className="waiting-badge">
-                      {onlineUsers.includes(user) ? "online" : "offline"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+    <span className="folder-title">Өмнөх чатнууд</span>
 
-          <h3 className="online-title users-title">Online users 👥</h3>
+    <span className="folder-count">{recentChats.length}</span>
+  </button>
 
-          <div className="users-list">
-            {onlineUsers.length === 0 ? (
-              <div className="user-item-static">Одоогоор хэрэглэгч алга</div>
+  {showRecentChats && (
+    <div className="folder-content">
+      {recentChats.length === 0 ? (
+        <div className="folder-empty">Одоогоор өмнөх чат алга</div>
+      ) : (
+        recentChats.map((user) => (
+          <button
+            key={user}
+            className={`folder-user-item ${
+              chatMode === "private" && selectedUser === user
+                ? "active-folder-user"
+                : ""
+            }`}
+            onClick={() => handleUserClick(user)}
+          >
+            <span className="folder-user-icon">💬</span>
+
+            <span className="folder-user-name">{user}</span>
+
+            <span
+              className={`folder-user-status ${
+                onlineUsers.includes(user) ? "online" : "offline"
+              }`}
+            >
+              {onlineUsers.includes(user) ? "online" : "offline"}
+            </span>
+          </button>
+        ))
+      )}
+    </div>
+  )}
+</div>
+
+          <div className="folder-section">
+  <button
+    type="button"
+    className="folder-header"
+    onClick={() => setShowOnlineUsers((prev) => !prev)}
+  >
+    <span className={`folder-arrow ${showOnlineUsers ? "open" : ""}`}>
+      ›
+    </span>
+
+    <span className="folder-title">Online users</span>
+
+    <span className="folder-count">{onlineUsers.length}</span>
+  </button>
+
+  {showOnlineUsers && (
+    <div className="folder-content">
+      {onlineUsers.length === 0 ? (
+        <div className="folder-empty">Одоогоор online хүн алга</div>
+      ) : (
+        onlineUsers.map((user) => (
+          <button
+            key={user}
+            className={`folder-user-item ${
+              chatMode === "private" && selectedUser === user
+                ? "active-folder-user"
+                : ""
+            }`}
+            onClick={() => handleUserClick(user)}
+          >
+            <span className="folder-user-icon">👤</span>
+
+            <span className="folder-user-name">{user}</span>
+
+            {activeChatUser === user ? (
+              <span className="folder-user-status chatting">chat</span>
+            ) : outgoingRequest === user ? (
+              <span className="folder-user-status request">request</span>
             ) : (
-              onlineUsers.map((user) => (
-                <button
-                  key={user}
-                  className={`user-item ${
-                    chatMode === "private" && selectedUser === user
-                      ? "active-user"
-                      : ""
-                  }`}
-                  onClick={() => handleUserClick(user)}
-                >
-                  <span>{user}</span>
-
-                  {activeChatUser === user && (
-                    <span className="waiting-badge">chat</span>
-                  )}
-
-                  {outgoingRequest === user && activeChatUser !== user && (
-                    <span className="waiting-badge">request...</span>
-                  )}
-                </button>
-              ))
+              <span className="folder-user-status online">online</span>
             )}
-          </div>
-        </div>
+          </button>
+        ))
+      )}
+    </div>
+  )}
+</div>
 
         <button className="logout-btn" onClick={handleLogout}>
           Гарах
