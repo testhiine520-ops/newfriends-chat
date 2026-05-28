@@ -1243,3 +1243,167 @@ input {
     font-size: 19px;
   }
 }
+
+/* =========================
+   FIX LIGHT THEME TEXT VISIBILITY
+   Бичиг харагдахгүй байгаа асуудлыг засна
+========================= */
+
+.chat-page,
+.sidebar,
+.chat-section,
+.room-item,
+.folder-section,
+.folder-header,
+.folder-content,
+.folder-user-item,
+.user-item,
+.user-item-static,
+.messages-box,
+.message-input-row,
+.mobile-panel,
+.mobile-list-item {
+  color: #0f172a !important;
+}
+
+.sidebar h2,
+.chat-header h1,
+.room-name,
+.folder-title,
+.folder-user-name,
+.my-name-box strong,
+.mobile-panel-content h3,
+.mobile-list-item strong {
+  color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+.cat-row,
+.my-name-box p,
+.room-desc,
+.chat-subtitle,
+.empty-text,
+.mobile-list-item p,
+.status-text,
+.message-input-row input,
+.create-room-row input {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.my-name-box {
+  background: #ffffff !important;
+}
+
+.my-name-box p {
+  color: #64748b !important;
+}
+
+.my-name-box strong {
+  color: #0f172a !important;
+}
+
+.room-item {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.room-item:hover,
+.active-room {
+  background: #eef5ff !important;
+}
+
+.room-count,
+.folder-count {
+  color: #16a34a !important;
+  background: #e9fbf0 !important;
+}
+
+.online-title {
+  color: #334155 !important;
+  opacity: 1 !important;
+}
+
+.create-room-title {
+  color: #2563eb !important;
+}
+
+.folder-arrow {
+  color: #2563eb !important;
+  background: #eaf2ff !important;
+}
+
+.folder-content {
+  background: #ffffff !important;
+}
+
+.folder-empty {
+  color: #64748b !important;
+  background: #f8fafc !important;
+}
+
+.folder-user-status.online {
+  color: #15803d !important;
+  background: #e9fbf0 !important;
+}
+
+.folder-user-status.offline {
+  color: #475569 !important;
+  background: #f1f5f9 !important;
+}
+
+.message-input-row input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #dbe3ee !important;
+}
+
+.message-input-row input::placeholder,
+.create-room-row input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+.send-btn {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+}
+
+.logout-btn {
+  color: #ef4444 !important;
+  background: #fff1f1 !important;
+}
+
+.logout-btn:hover {
+  color: #ffffff !important;
+  background: #ef4444 !important;
+}
+
+.media-btn {
+  color: #64748b !important;
+  background: #ffffff !important;
+}
+
+.media-btn:hover {
+  color: #2563eb !important;
+  background: #eaf2ff !important;
+}
+
+.system-message {
+  color: #15803d !important;
+}
+
+.my-message .message-bubble {
+  color: #2563eb !important;
+  background: #eaf2ff !important;
+}
+
+.their-message .message-bubble {
+  color: #0f172a !important;
+  background: #f1f3f7 !important;
+}
+
+.my-message .message-bubble strong,
+.their-message .message-bubble strong {
+  color: inherit !important;
+}
