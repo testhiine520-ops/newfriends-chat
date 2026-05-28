@@ -313,7 +313,7 @@ export default function Chat() {
       roomId,
     });
 
-    setStatusText("Та group room-д орлоо.");
+    setStatusText("Та Групп-д орлоо.");
   };
 
   const handleLeaveRoom = () => {
@@ -324,7 +324,7 @@ export default function Chat() {
     });
 
     setJoinedRooms((prev) => prev.filter((roomId) => roomId !== selectedRoom));
-    setStatusText("Та room-оос гарлаа.");
+    setStatusText("Та Групп-оос гарлаа.");
   };
 
   const handleUserClick = (user) => {
@@ -557,7 +557,7 @@ export default function Chat() {
                     <div className="room-desc">{room.description}</div>
 
                     {isJoined && (
-                      <div className="joined-badge">Та энэ room-д байна</div>
+                      <div className="joined-badge">Та энэ Групп-д байна</div>
                     )}
                   </button>
                 );
@@ -731,7 +731,7 @@ export default function Chat() {
                       <div>
                         <strong>{room.name}</strong>
                         <p>{room.description}</p>
-                        {isJoined && <span>Та энэ room-д байна</span>}
+                        {isJoined && <span>Та энэ Групп-д байна</span>}
                       </div>
 
                       <em>{room.count} хүн</em>
@@ -908,7 +908,7 @@ export default function Chat() {
 
             {chatMode === "room" && selectedRoom && (
               <button className="leave-room-btn" onClick={handleLeaveRoom}>
-                Room-оос гарах
+                Групп-ээс гарах
               </button>
             )}
           </div>
@@ -989,7 +989,7 @@ export default function Chat() {
               canChat
                 ? "Энд мессежээ бичнэ..."
                 : chatMode === "room"
-                ? "Мессеж бичихийн тулд Групп room-д орно уу."
+                ? "Мессеж бичихийн тулд Групп-д орно уу."
                 : "Private Чат эхлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
             }
             value={message}

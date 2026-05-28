@@ -1407,3 +1407,75 @@ input {
 .their-message .message-bubble strong {
   color: inherit !important;
 }
+
+/* =========================
+   FIX FONT CONSISTENCY
+   Бүх гарчиг, room нэр, folder нэрийг нэг style болгоно
+========================= */
+
+.sidebar,
+.chat-section,
+.sidebar * ,
+.chat-section * {
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+}
+
+/* Sidebar доторх жижиг гарчгууд: Group chats, Group үүсгэх, Өмнөх чатнууд */
+.online-title,
+.create-room-title,
+.folder-title {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: #2563eb !important;
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+}
+
+/* Room card доторх нэрүүд: Тусламж, зөвлөгөө гэх мэт */
+.room-name {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+  color: #0f172a !important;
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+}
+
+/* Folder card дээрх “Өмнөх чатнууд”, “Online users” */
+.folder-title {
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Group үүсгэх гарчиг */
+.create-room-title {
+  color: #2563eb !important;
+}
+
+/* “Групп chats” гарчиг */
+.online-title {
+  color: #334155 !important;
+}
+
+/* Sidebar main title */
+.sidebar h2 {
+  font-size: 24px !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  color: #0f172a !important;
+}
+
+/* Description text */
+.room-desc,
+.folder-empty,
+.my-name-box p {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: #64748b !important;
+}
