@@ -1,85 +1,267 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+/* =========================
+   IMPORTS
+========================= */
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import "./Chat.css";
 
-const SERVER_URL =
-  import.meta.env.PROD ? window.location.origin : "http://localhost:3001";
+/* =========================
+   SERVER CONFIG
+========================= */
 
-export default function Chat() {
-  const location = useLocation();
+const SERVER_URL =
+  import.meta.env.VITE_SERVER_URL ||
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost"
+    ? "http://localhost:3001"
+    : window.location.origin);
+
+const socket = io(SERVER_URL, {
+  withCredentials: true,
+  transports: ["websocket", "polling"],
+});
+
+/* =========================
+   DEFAULT ROOMS
+========================= */
+
+const DEFAULT_ROOMS = [
+  {
+    id: "study",
+    name: "Хамт хичээл хийх",
+    description: "Хичээлээ хамт хийж, даалгавраа ярилцах",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "room",
+    name: "Заал авах",
+    description: "Цуг заал авч тоглоё!",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "movie",
+    name: "Кино, сериал",
+    description: "Кино, сериалын талаар ярилцах, санал болгох",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "game",
+    name: "Тоглоом",
+    description: "Хамт PC болон Mobile тоглоом тоглоё!",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "fun",
+    name: "Цагийг зугаатай өнгөрөөх",
+    description: "Уйдсан үедээ ярилцаж, танилцах",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "friend",
+    name: "Шинэ найз олох",
+    description: "Шинэ хүмүүстэй танилцаж, нөхөрлөх",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "food",
+    name: "Хоол, кофе",
+    description: "Хоол идэх, кофе уух хүмүүс хайх",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+  {
+    id: "help",
+    name: "Тусламж, зөвлөгөө",
+    description: "Асуулт асууж, зөвлөгөө авах",
+    custom: false,
+    creator: null,
+    users: [],
+    count: 0,
+  },
+];
+
+/* =========================
+   HELPER FUNCTIONS
+========================= */
+
+function getUsernameFromStorage() {
+  const possibleKeys = [
+    "newfriends_user",
+    "chatUser",
+    "user",
+    "currentUser",
+    "username",
+  ];
+
+  for (const key of possibleKeys) {
+    const value = localStorage.getItem(key);
+
+    if (!value) continue;
+
+    try {
+      const parsed = JSON.parse(value);
+
+      if (typeof parsed === "string") return parsed;
+      if (parsed?.username) return parsed.username;
+      if (parsed?.name) return parsed.name;
+      if (parsed?.user?.username) return parsed.user.username;
+    } catch {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+function formatMessageTime(createdAt) {
+  if (!createdAt) return "";
+
+  try {
+    const date = new Date(createdAt);
+
+    return date.toLocaleTimeString("mn-MN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
+
+function isSamePrivatePair(message, myName, selectedUser) {
+  if (!message || !myName || !selectedUser) return false;
+
+  return (
+    (message.from === myName && message.to === selectedUser) ||
+    (message.from === selectedUser && message.to === myName)
+  );
+}
+
+function uniqueMessages(messages) {
+  const seen = new Set();
+
+  return messages.filter((msg) => {
+    const key =
+      msg.id ||
+      `${msg.from}-${msg.to}-${msg.roomId}-${msg.text}-${msg.createdAt}`;
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+}
+
+/* =========================
+   MAIN COMPONENT
+========================= */
+
+export default function ChatPage() {
   const navigate = useNavigate();
 
-  const socketRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  /* =========================
+     USER STATE
+  ========================= */
 
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const streamRef = useRef(null);
-  const recordingTargetRef = useRef(null);
-
-  const myName =
-    location.state?.name || localStorage.getItem("chat_name") || "";
-
+  const [myName, setMyName] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [recentChats, setRecentChats] = useState([]);
 
-  const [rooms, setRooms] = useState([]);
+  /* =========================
+     ROOM STATE
+  ========================= */
+
+  const [rooms, setRooms] = useState(DEFAULT_ROOMS);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [joinedRooms, setJoinedRooms] = useState([]);
-  const [roomMessages, setRoomMessages] = useState({});
   const [newRoomName, setNewRoomName] = useState("");
 
+  /* =========================
+     PRIVATE CHAT STATE
+  ========================= */
+
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeChatUser, setActiveChatUser] = useState(null);
-  const [incomingRequest, setIncomingRequest] = useState(null);
-  const [outgoingRequest, setOutgoingRequest] = useState(null);
-  const [privateMessages, setPrivateMessages] = useState({});
+  const [privateActiveUser, setPrivateActiveUser] = useState(null);
+  const [receivedRequest, setReceivedRequest] = useState(null);
+
+  /* =========================
+     SAVED PRIVATE CHATS STATE
+     ❤️ дарсан хүмүүс л энд хадгалагдана
+  ========================= */
+
+  const [recentChats, setRecentChats] = useState([]);
+  const [savedChats, setSavedChats] = useState([]);
+
+  /* =========================
+     MESSAGE STATE
+  ========================= */
 
   const [chatMode, setChatMode] = useState("room");
-  const [mobileTab, setMobileTab] = useState("groups");
+  const [roomMessages, setRoomMessages] = useState({});
+  const [privateMessages, setPrivateMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState("");
+  const [statusText, setStatusText] = useState(
+    "Эхлээд group chat сонгоно уу."
+  );
 
-  const [message, setMessage] = useState("");
-  const [statusText, setStatusText] = useState("");
+  /* =========================
+     UI STATE
+  ========================= */
+
+  const [isRecentOpen, setIsRecentOpen] = useState(true);
+  const [isOnlineOpen, setIsOnlineOpen] = useState(true);
+  const [mobileTab, setMobileTab] = useState("chat");
+
+  /* =========================
+     MEDIA STATE
+  ========================= */
+
+  const fileInputRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const [isRecording, setIsRecording] = useState(false);
 
-  const fileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
+  /* =========================
+     CURRENT USER INIT
+  ========================= */
 
-  const addRoomMessage = (roomId, msg) => {
-    setRoomMessages((prev) => {
-      const oldMessages = prev[roomId] || [];
+  useEffect(() => {
+    const username = getUsernameFromStorage();
 
-      if (msg.id && oldMessages.some((m) => m.id === msg.id)) {
-        return prev;
-      }
+    if (!username) {
+      navigate("/");
+      return;
+    }
 
-      return {
-        ...prev,
-        [roomId]: [...oldMessages, msg],
-      };
-    });
-  };
+    setMyName(username);
+    socket.emit("join", username);
+    loadRecentChats(username);
+  }, [navigate]);
 
-  const addPrivateMessage = (partner, msg) => {
-    setPrivateMessages((prev) => {
-      const oldMessages = prev[partner] || [];
-
-      if (msg.id && oldMessages.some((m) => m.id === msg.id)) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        [partner]: [...oldMessages, msg],
-      };
-    });
-  };
+  /* =========================
+     LOAD SAVED CHATS FROM MONGODB
+  ========================= */
 
   const loadRecentChats = async (username) => {
     try {
@@ -91,1001 +273,1138 @@ export default function Chat() {
 
       if (response.ok && data.ok) {
         setRecentChats(data.recentChats || []);
+        setSavedChats(data.recentChats || []);
       }
     } catch (err) {
-      console.error("Recent chats load error:", err);
+      console.error("Saved chats load error:", err);
     }
   };
 
+  /* =========================
+     SOCKET EVENTS
+  ========================= */
+
   useEffect(() => {
-    if (!myName) {
-      navigate("/");
-      return;
-    }
+    if (!myName) return;
 
-    loadRecentChats(myName);
+    const handleUsersList = (users) => {
+      setOnlineUsers(Array.isArray(users) ? users : []);
+    };
 
-    const socket = io(SERVER_URL);
-    socketRef.current = socket;
+    const handleRoomsData = (data) => {
+      if (Array.isArray(data)) {
+        setRooms(data);
+      }
+    };
 
-    socket.emit("join", myName);
+    const handleRoomCreated = ({ room }) => {
+      if (!room) return;
 
-    socket.on("users_list", (users) => {
-      setOnlineUsers(users.filter((u) => u !== myName));
-    });
+      setRooms((prev) => {
+        const exists = prev.some((item) => item.id === room.id);
+        if (exists) return prev;
+        return [...prev, room];
+      });
 
-    socket.on("rooms_data", (roomsData) => {
-      setRooms(roomsData || []);
-    });
-
-    socket.on("room_created", ({ room }) => {
-      if (!room?.id) return;
-
-      setSelectedRoom(room.id);
+      setSelectedRoom(room);
       setSelectedUser(null);
       setChatMode("room");
-      setMobileTab("chat");
+      setStatusText(`"${room.name}" group үүслээ.`);
 
-      setJoinedRooms((prev) =>
-        prev.includes(room.id) ? prev : [...prev, room.id]
-      );
+      socket.emit("join_room", { roomId: room.id });
+    };
 
-      socket.emit("join_room", {
-        roomId: room.id,
-      });
-
-      setStatusText("Шинэ group chat үүслээ.");
-    });
-
-    socket.on("room_removed", ({ roomId, text }) => {
-      setJoinedRooms((prev) => prev.filter((id) => id !== roomId));
+    const handleRoomRemoved = ({ roomId, text }) => {
+      setRooms((prev) => prev.filter((room) => room.id !== roomId));
 
       setRoomMessages((prev) => {
-        const copy = { ...prev };
-        delete copy[roomId];
-        return copy;
+        const next = { ...prev };
+        delete next[roomId];
+        return next;
       });
 
-      setSelectedRoom((prev) => (prev === roomId ? null : prev));
-      setStatusText(text || "Групп устлаа.");
-    });
+      if (selectedRoom?.id === roomId) {
+        setSelectedRoom(null);
+        setStatusText(text || "Group устлаа.");
+      }
+    };
 
-    socket.on("room_history", ({ roomId, messages }) => {
+    const handleRoomHistory = ({ roomId, messages }) => {
       setRoomMessages((prev) => ({
         ...prev,
-        [roomId]: messages || [],
+        [roomId]: Array.isArray(messages) ? messages : [],
       }));
-    });
+    };
 
-    socket.on("room_system_message", (msg) => {
-      addRoomMessage(msg.roomId, msg);
-    });
+    const appendRoomMessage = (msg) => {
+      if (!msg?.roomId) return;
 
-    socket.on("room_message", (msg) => {
-      addRoomMessage(msg.roomId, msg);
-    });
+      setRoomMessages((prev) => {
+        const oldMessages = prev[msg.roomId] || [];
 
-    socket.on("room_image", (msg) => {
-      addRoomMessage(msg.roomId, msg);
-    });
+        return {
+          ...prev,
+          [msg.roomId]: uniqueMessages([...oldMessages, msg]),
+        };
+      });
+    };
 
-    socket.on("room_voice", (msg) => {
-      addRoomMessage(msg.roomId, msg);
-    });
+    const appendPrivateMessage = (msg) => {
+      if (!msg?.from || !msg?.to) return;
 
-    socket.on("receive_chat_request", ({ from }) => {
-      setIncomingRequest({ from });
-      setChatMode("private");
-      setSelectedUser(from);
-      setSelectedRoom(null);
-      setMobileTab("chat");
-      setStatusText(`${from} танд chat request илгээлээ.`);
-    });
+      setPrivateMessages((prev) => uniqueMessages([...prev, msg]));
+    };
 
-    socket.on("chat_request_response", ({ from, to, accepted }) => {
-      const otherUser = from === myName ? to : from;
+    const handleReceiveChatRequest = ({ from }) => {
+      if (!from) return;
+
+      setReceivedRequest({ from });
+      setStatusText(`${from} private chat хийх хүсэлт илгээлээ.`);
+    };
+
+    const handleChatRequestResponse = ({ from, accepted }) => {
+      if (!from) return;
 
       if (accepted) {
-        setActiveChatUser(otherUser);
-        setSelectedUser(otherUser);
+        setSelectedUser(from);
         setSelectedRoom(null);
         setChatMode("private");
-        setMobileTab("chat");
-        setOutgoingRequest(null);
-        setIncomingRequest(null);
-        setStatusText(`${otherUser}-тэй чат эхэллээ.`);
-        loadRecentChats(myName);
+        setPrivateActiveUser(from);
+        setStatusText(`${from}-тэй chat эхэллээ.`);
       } else {
-        setOutgoingRequest(null);
-        setIncomingRequest(null);
-        setStatusText(`${otherUser} chat request-ийг татгалзлаа.`);
+        setPrivateActiveUser(null);
+        setStatusText(`${from} request-ийг зөвшөөрсөнгүй.`);
       }
-    });
+    };
 
-    socket.on("chat_started", ({ users }) => {
-      const otherUser = users.find((u) => u !== myName);
+    const handleChatStarted = ({ users }) => {
+      if (!Array.isArray(users)) return;
 
-      setActiveChatUser(otherUser);
-      setSelectedUser(otherUser);
+      const partner = users.find((user) => user !== myName);
+
+      if (!partner) return;
+
+      setSelectedUser(partner);
       setSelectedRoom(null);
       setChatMode("private");
-      setMobileTab("chat");
-      setOutgoingRequest(null);
-      setIncomingRequest(null);
-      setStatusText(`${otherUser}-тэй чат эхэллээ.`);
-      loadRecentChats(myName);
-    });
+      setPrivateActiveUser(partner);
+      setStatusText(`${partner}-тэй chat эхэллээ.`);
+    };
 
-    socket.on("private_message", (msg) => {
-      const partner = msg.from === myName ? msg.to : msg.from;
-      addPrivateMessage(partner, msg);
-    });
+    const handlePartnerLeft = ({ username, text }) => {
+      setPrivateActiveUser(null);
+      setStatusText(text || `${username || "Нөгөө хүн"} offline байна.`);
+    };
 
-    socket.on("private_image", (msg) => {
-      const partner = msg.from === myName ? msg.to : msg.from;
-      addPrivateMessage(partner, msg);
-    });
+    socket.on("users_list", handleUsersList);
+    socket.on("rooms_data", handleRoomsData);
+    socket.on("room_created", handleRoomCreated);
+    socket.on("room_removed", handleRoomRemoved);
+    socket.on("room_history", handleRoomHistory);
 
-    socket.on("private_voice", (msg) => {
-      const partner = msg.from === myName ? msg.to : msg.from;
-      addPrivateMessage(partner, msg);
-    });
+    socket.on("room_message", appendRoomMessage);
+    socket.on("room_image", appendRoomMessage);
+    socket.on("room_voice", appendRoomMessage);
+    socket.on("room_system_message", appendRoomMessage);
 
-    socket.on("partner_left", ({ username, text }) => {
-      addPrivateMessage(username, {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        from: "system",
-        type: "system",
-        text,
-      });
+    socket.on("receive_chat_request", handleReceiveChatRequest);
+    socket.on("chat_request_response", handleChatRequestResponse);
+    socket.on("chat_started", handleChatStarted);
+    socket.on("partner_left", handlePartnerLeft);
 
-      setActiveChatUser((prev) => (prev === username ? null : prev));
-      setOutgoingRequest((prev) => (prev === username ? null : prev));
-      setIncomingRequest((prev) => (prev?.from === username ? null : prev));
-      setSelectedUser(username);
-      setSelectedRoom(null);
-      setChatMode("private");
-      setMobileTab("chat");
-      setStatusText(text);
-    });
+    socket.on("private_message", appendPrivateMessage);
+    socket.on("private_image", appendPrivateMessage);
+    socket.on("private_voice", appendPrivateMessage);
 
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      socket.off("users_list", handleUsersList);
+      socket.off("rooms_data", handleRoomsData);
+      socket.off("room_created", handleRoomCreated);
+      socket.off("room_removed", handleRoomRemoved);
+      socket.off("room_history", handleRoomHistory);
 
-      socket.disconnect();
+      socket.off("room_message", appendRoomMessage);
+      socket.off("room_image", appendRoomMessage);
+      socket.off("room_voice", appendRoomMessage);
+      socket.off("room_system_message", appendRoomMessage);
+
+      socket.off("receive_chat_request", handleReceiveChatRequest);
+      socket.off("chat_request_response", handleChatRequestResponse);
+      socket.off("chat_started", handleChatStarted);
+      socket.off("partner_left", handlePartnerLeft);
+
+      socket.off("private_message", appendPrivateMessage);
+      socket.off("private_image", appendPrivateMessage);
+      socket.off("private_voice", appendPrivateMessage);
     };
-  }, [myName, navigate]);
+  }, [myName, selectedRoom]);
 
-  const currentRoom = useMemo(() => {
-    return rooms.find((room) => room.id === selectedRoom) || null;
-  }, [rooms, selectedRoom]);
-
-  const canRoomChat = chatMode === "room" && selectedRoom;
-
-  const canPrivateChat =
-    chatMode === "private" &&
-    selectedUser &&
-    activeChatUser &&
-    selectedUser === activeChatUser;
-
-  const canChat = canRoomChat || canPrivateChat;
-
-  const currentMessages =
-    chatMode === "room"
-      ? selectedRoom
-        ? roomMessages[selectedRoom] || []
-        : []
-      : selectedUser
-      ? privateMessages[selectedUser] || []
-      : [];
+  /* =========================
+     AUTO SCROLL
+  ========================= */
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [currentMessages.length, selectedRoom, selectedUser, chatMode]);
-
-  const handleCreateRoom = () => {
-    const cleanName = newRoomName.trim();
-    if (!cleanName) return;
-
-    socketRef.current.emit("create_room", {
-      name: cleanName,
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
     });
+  }, [roomMessages, privateMessages, selectedRoom, selectedUser, chatMode]);
 
-    setNewRoomName("");
-  };
+  /* =========================
+     DERIVED DATA
+  ========================= */
 
-  const handleRoomClick = (roomId) => {
-    setChatMode("room");
-    setSelectedRoom(roomId);
+  const filteredOnlineUsers = useMemo(() => {
+    return onlineUsers.filter((user) => user !== myName);
+  }, [onlineUsers, myName]);
+
+  const selectedRoomMessages = useMemo(() => {
+    if (!selectedRoom) return [];
+    return roomMessages[selectedRoom.id] || [];
+  }, [roomMessages, selectedRoom]);
+
+  const selectedPrivateMessages = useMemo(() => {
+    if (!selectedUser) return [];
+
+    return privateMessages.filter((msg) =>
+      isSamePrivatePair(msg, myName, selectedUser)
+    );
+  }, [privateMessages, myName, selectedUser]);
+
+  const currentMessages =
+    chatMode === "private" ? selectedPrivateMessages : selectedRoomMessages;
+
+  const isSelectedUserOnline = selectedUser
+    ? onlineUsers.includes(selectedUser)
+    : false;
+
+  const canSendPrivate =
+    chatMode === "private" &&
+    selectedUser &&
+    privateActiveUser === selectedUser &&
+    isSelectedUserOnline;
+
+  const canSendRoom = chatMode === "room" && selectedRoom;
+
+  const canSendMessage = canSendRoom || canSendPrivate;
+
+  /* =========================
+     ROOM ACTIONS
+  ========================= */
+
+  const handleSelectRoom = (room) => {
+    if (!room) return;
+
+    setSelectedRoom(room);
     setSelectedUser(null);
-    setMessage("");
+    setPrivateActiveUser(null);
+    setChatMode("room");
     setMobileTab("chat");
+    setStatusText(`Та "${room.name}" group room-д орлоо.`);
 
-    if (!joinedRooms.includes(roomId)) {
-      setJoinedRooms((prev) => [...prev, roomId]);
-    }
-
-    socketRef.current.emit("join_room", {
-      roomId,
+    socket.emit("join_room", {
+      roomId: room.id,
     });
-
-    setStatusText("Та Групп-д орлоо.");
   };
 
   const handleLeaveRoom = () => {
     if (!selectedRoom) return;
 
-    socketRef.current.emit("leave_room", {
-      roomId: selectedRoom,
+    socket.emit("leave_room", {
+      roomId: selectedRoom.id,
     });
 
-    setJoinedRooms((prev) => prev.filter((roomId) => roomId !== selectedRoom));
-    setStatusText("Та Групп-оос гарлаа.");
+    setSelectedRoom(null);
+    setStatusText("Эхлээд group chat сонгоно уу.");
   };
 
-  const handleUserClick = (user) => {
-    setChatMode("private");
-    setSelectedUser(user);
+  const handleCreateRoom = () => {
+    const cleanName = newRoomName.trim();
+
+    if (!cleanName) return;
+
+    socket.emit("create_room", {
+      name: cleanName,
+    });
+
+    setNewRoomName("");
+    setMobileTab("chat");
+  };
+
+  /* =========================
+     PRIVATE CHAT ACTIONS
+  ========================= */
+
+  const handleSelectUser = (username) => {
+    if (!username || username === myName) return;
+
+    setSelectedUser(username);
     setSelectedRoom(null);
-    setMessage("");
+    setChatMode("private");
     setMobileTab("chat");
 
-    if (activeChatUser === user) {
-      setStatusText(`${user}-тэй чатлаж байна.`);
+    if (!onlineUsers.includes(username)) {
+      setPrivateActiveUser(null);
+      setStatusText(`${username} одоогоор offline байна.`);
       return;
     }
 
-    if (!onlineUsers.includes(user)) {
-      setStatusText(`${user} одоогоор Онлайн биш байна.`);
-      return;
-    }
+    setStatusText(`${username} рүү private chat request явууллаа.`);
 
-    if (outgoingRequest === user) {
-      setStatusText(`${user} таны request-ийг зөвшөөрөхийг хүлээж байна.`);
-      return;
-    }
-
-    socketRef.current.emit("send_chat_request", {
+    socket.emit("send_chat_request", {
       from: myName,
-      to: user,
+      to: username,
     });
-
-    setOutgoingRequest(user);
-    setStatusText(`${user} рүү request явууллаа...`);
   };
 
-  const handleRequestResponse = (accepted) => {
-    if (!incomingRequest) return;
+  const handleAcceptRequest = () => {
+    if (!receivedRequest?.from) return;
 
-    socketRef.current.emit("respond_chat_request", {
-      from: incomingRequest.from,
+    socket.emit("respond_chat_request", {
+      from: receivedRequest.from,
       to: myName,
-      accepted,
+      accepted: true,
     });
 
-    if (accepted) {
-      setActiveChatUser(incomingRequest.from);
-      setSelectedUser(incomingRequest.from);
-      setSelectedRoom(null);
-      setChatMode("private");
-      setMobileTab("chat");
-      setStatusText(`${incomingRequest.from}-тэй чат эхэллээ.`);
-      loadRecentChats(myName);
-    } else {
-      setStatusText(`${incomingRequest.from}-ийн request-ийг татгалзлаа.`);
-    }
-
-    setIncomingRequest(null);
+    setSelectedUser(receivedRequest.from);
+    setSelectedRoom(null);
+    setChatMode("private");
+    setPrivateActiveUser(receivedRequest.from);
+    setStatusText(`${receivedRequest.from}-тэй chat эхэллээ.`);
+    setReceivedRequest(null);
+    setMobileTab("chat");
   };
+
+  const handleRejectRequest = () => {
+    if (!receivedRequest?.from) return;
+
+    socket.emit("respond_chat_request", {
+      from: receivedRequest.from,
+      to: myName,
+      accepted: false,
+    });
+
+    setStatusText(`${receivedRequest.from}-ийн request татгалзлаа.`);
+    setReceivedRequest(null);
+  };
+
+  /* =========================
+     SAVE PRIVATE CHAT ACTION
+     ❤️ дарсан үед MongoDB-д хадгална
+  ========================= */
+
+  const handleToggleSaveChat = async () => {
+    if (!selectedUser || chatMode !== "private") return;
+
+    const isSaved = savedChats.includes(selectedUser);
+
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/users/${encodeURIComponent(myName)}/saved-chats`,
+        {
+          method: isSaved ? "DELETE" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            partner: selectedUser,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        setSavedChats(data.savedChats || []);
+        setRecentChats(data.savedChats || []);
+
+        setStatusText(
+          isSaved
+            ? `${selectedUser} хадгалсан чатаас хасагдлаа.`
+            : `${selectedUser} хадгалсан чатад нэмэгдлээ.`
+        );
+      }
+    } catch (err) {
+      console.error("Save chat error:", err);
+      setStatusText("Chat хадгалах үед алдаа гарлаа.");
+    }
+  };
+
+  /* =========================
+     SEND TEXT MESSAGE
+  ========================= */
 
   const handleSendMessage = () => {
-    const cleanText = message.trim();
+    const cleanText = messageInput.trim();
+
     if (!cleanText) return;
-    if (!canChat) return;
 
     if (chatMode === "room") {
-      socketRef.current.emit("room_message", {
-        roomId: selectedRoom,
+      if (!selectedRoom) return;
+
+      socket.emit("room_message", {
+        roomId: selectedRoom.id,
         text: cleanText,
       });
+
+      setMessageInput("");
+      return;
     }
 
     if (chatMode === "private") {
-      socketRef.current.emit("private_message", {
+      if (!selectedUser) return;
+
+      if (!canSendPrivate) {
+        setStatusText("Private chat эхлүүлэхийн тулд request зөвшөөрөгдөх хэрэгтэй.");
+        return;
+      }
+
+      socket.emit("private_message", {
         from: myName,
-        to: selectedUser || activeChatUser,
+        to: selectedUser,
         text: cleanText,
       });
-    }
 
-    setMessage("");
+      setMessageInput("");
+    }
   };
 
-  const handleImageSelect = async (e) => {
-    const file = e.target.files?.[0];
+  const handleInputKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSendMessage();
+    }
+  };
+
+  /* =========================
+     SEND IMAGE MESSAGE
+  ========================= */
+
+  const handleImageButtonClick = () => {
+    if (!canSendMessage) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
     if (!file) return;
-    if (!canChat) return;
 
-    try {
-      const base64 = await fileToBase64(file);
-
-      if (chatMode === "room") {
-        socketRef.current.emit("room_image", {
-          roomId: selectedRoom,
-          image: base64,
-          fileName: file.name,
-        });
-      }
-
-      if (chatMode === "private") {
-        socketRef.current.emit("private_image", {
-          from: myName,
-          to: selectedUser || activeChatUser,
-          image: base64,
-          fileName: file.name,
-        });
-      }
-    } catch (err) {
-      console.error("Image send error:", err);
+    if (!file.type.startsWith("image/")) {
+      alert("Зөвхөн зураг файл сонгоно уу.");
+      event.target.value = "";
+      return;
     }
 
-    e.target.value = "";
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const image = reader.result;
+
+      if (chatMode === "room" && selectedRoom) {
+        socket.emit("room_image", {
+          roomId: selectedRoom.id,
+          image,
+          fileName: file.name,
+        });
+      }
+
+      if (chatMode === "private" && selectedUser && canSendPrivate) {
+        socket.emit("private_image", {
+          from: myName,
+          to: selectedUser,
+          image,
+          fileName: file.name,
+        });
+      }
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
   };
 
-  const startRecording = async () => {
-    if (!canChat) return;
+  /* =========================
+     SEND VOICE MESSAGE
+  ========================= */
 
-    recordingTargetRef.current =
-      chatMode === "room"
-        ? { mode: "room", roomId: selectedRoom }
-        : { mode: "private", to: selectedUser || activeChatUser };
+  const handleVoiceButtonClick = async () => {
+    if (!canSendMessage) return;
+
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
 
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
+      const mediaRecorder = new MediaRecorder(stream);
+
       audioChunksRef.current = [];
+      mediaRecorderRef.current = mediaRecorder;
 
-      recorder.ondataavailable = (event) => {
+      mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
-      recorder.onstop = () => {
+      mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/webm",
         });
 
         const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
 
-        reader.onloadend = () => {
-          const target = recordingTargetRef.current;
+        reader.onload = () => {
+          const audio = reader.result;
 
-          if (target?.mode === "room") {
-            socketRef.current.emit("room_voice", {
-              roomId: target.roomId,
-              audio: reader.result,
+          if (chatMode === "room" && selectedRoom) {
+            socket.emit("room_voice", {
+              roomId: selectedRoom.id,
+              audio,
             });
           }
 
-          if (target?.mode === "private") {
-            socketRef.current.emit("private_voice", {
+          if (chatMode === "private" && selectedUser && canSendPrivate) {
+            socket.emit("private_voice", {
               from: myName,
-              to: target.to,
-              audio: reader.result,
+              to: selectedUser,
+              audio,
             });
           }
         };
 
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((track) => track.stop());
-        }
+        reader.readAsDataURL(audioBlob);
 
+        stream.getTracks().forEach((track) => track.stop());
         setIsRecording(false);
       };
 
-      recorder.start();
+      mediaRecorder.start();
       setIsRecording(true);
     } catch (err) {
-      console.error("Mic access error:", err);
-      alert("Микрофон permission өгнө үү.");
+      console.error("Voice record error:", err);
+      alert("Микрофон ашиглах зөвшөөрөл хэрэгтэй.");
+      setIsRecording(false);
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-    }
-  };
+  /* =========================
+     LOGOUT
+  ========================= */
 
   const handleLogout = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-    }
+    localStorage.removeItem("newfriends_user");
+    localStorage.removeItem("chatUser");
+    localStorage.removeItem("user");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("username");
 
-    localStorage.removeItem("chat_name");
-    localStorage.removeItem("chat_user_id");
-
-    socketRef.current?.disconnect();
     navigate("/");
   };
 
-  return (
-    <div className="chat-page">
-      <div className="sidebar">
-        <h2>Newfriends.com</h2>
-        <div className="cat-row"></div>
+  /* =========================
+     RENDER MESSAGE
+  ========================= */
 
-        <div className="my-name-box">
-          <p>Таны нэр:</p>
-          <strong>{myName}</strong>
+  const renderMessage = (msg) => {
+    if (!msg) return null;
+
+    if (msg.type === "system" || msg.from === "system") {
+      return (
+        <div key={msg.id || msg.createdAt} className="system-message">
+          {msg.text}
         </div>
+      );
+    }
 
-        <div className="sidebar-scroll">
-          <h3 className="online-title">Групп chats 💬</h3>
+    const isMine = msg.from === myName;
 
-          <div className="rooms-list">
-            {rooms.length === 0 ? (
-              <div className="user-item-static">Room ачааллаж байна...</div>
-            ) : (
-              rooms.map((room) => {
-                const isSelected =
-                  chatMode === "room" && selectedRoom === room.id;
-                const isJoined = joinedRooms.includes(room.id);
+    return (
+      <div
+        key={msg.id || `${msg.from}-${msg.createdAt}-${msg.text}`}
+        className={`message-row ${isMine ? "my-message" : "their-message"}`}
+      >
+        <div className="message-bubble">
+          <strong>{msg.from}: </strong>
 
-                return (
-                  <button
-                    key={room.id}
-                    className={`room-item ${
-                      isSelected ? "active-room" : ""
-                    } ${isJoined ? "joined-room" : ""}`}
-                    onClick={() => handleRoomClick(room.id)}
-                  >
-                    <div className="room-top">
-                      <span className="room-name">{room.name}</span>
-                      <span className="room-count">{room.count} хүн</span>
-                    </div>
-
-                    <div className="room-desc">{room.description}</div>
-
-                    {isJoined && (
-                      <div className="joined-badge">Та энэ Групп-д байна</div>
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          <div className="create-room-box">
-            <h3 className="online-title create-room-title">
-              Групп үүсгэх ✨
-            </h3>
-
-            <div className="create-room-row">
-              <input
-                type="text"
-                placeholder="Групп нэр..."
-                value={newRoomName}
-                onChange={(e) => setNewRoomName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
-              />
-
-              <button type="button" onClick={handleCreateRoom}>
-                +
-              </button>
+          {msg.type === "image" && msg.image ? (
+            <div className="media-message">
+              <img className="chat-image" src={msg.image} alt="chat upload" />
             </div>
-          </div>
+          ) : msg.type === "audio" && msg.audio ? (
+            <div className="media-message">
+              <audio className="chat-audio" src={msg.audio} controls />
+            </div>
+          ) : (
+            msg.text
+          )}
 
-          <div className="folder-section">
-            <button
-              type="button"
-              className="folder-header"
-              onClick={() =>
-                setMobileTab((prev) => (prev === "recent" ? "chat" : "recent"))
-              }
-            >
-              <span
-                className={`folder-arrow ${
-                  mobileTab === "recent" ? "open" : ""
-                }`}
-              >
-                ›
-              </span>
-
-              <span className="folder-title">Өмнөх чатнууд</span>
-
-              <span className="folder-count">{recentChats.length}</span>
-            </button>
-
-            {mobileTab === "recent" && (
-              <div className="folder-content">
-                {recentChats.length === 0 ? (
-                  <div className="folder-empty">Одоогоор өмнөх чат алга</div>
-                ) : (
-                  recentChats.map((user) => (
-                    <button
-                      key={user}
-                      className={`folder-user-item ${
-                        chatMode === "private" && selectedUser === user
-                          ? "active-folder-user"
-                          : ""
-                      }`}
-                      onClick={() => handleUserClick(user)}
-                    >
-                      <span className="folder-user-icon">💬</span>
-
-                      <span className="folder-user-name">{user}</span>
-
-                      <span
-                        className={`folder-user-status ${
-                          onlineUsers.includes(user) ? "online" : "offline"
-                        }`}
-                      >
-                        {onlineUsers.includes(user) ? "online" : "offline"}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="folder-section">
-            <button
-              type="button"
-              className="folder-header"
-              onClick={() =>
-                setMobileTab((prev) => (prev === "users" ? "chat" : "users"))
-              }
-            >
-              <span
-                className={`folder-arrow ${
-                  mobileTab === "users" ? "open" : ""
-                }`}
-              >
-                ›
-              </span>
-
-              <span className="folder-title">Онлайн хэрэглэгчид</span>
-
-              <span className="folder-count">{onlineUsers.length}</span>
-            </button>
-
-            {mobileTab === "users" && (
-              <div className="folder-content">
-                {onlineUsers.length === 0 ? (
-                  <div className="folder-empty">Одоогоор Онлайн хүн алга</div>
-                ) : (
-                  onlineUsers.map((user) => (
-                    <button
-                      key={user}
-                      className={`folder-user-item ${
-                        chatMode === "private" && selectedUser === user
-                          ? "active-folder-user"
-                          : ""
-                      }`}
-                      onClick={() => handleUserClick(user)}
-                    >
-                      <span className="folder-user-icon">👤</span>
-
-                      <span className="folder-user-name">{user}</span>
-
-                      {activeChatUser === user ? (
-                        <span className="folder-user-status chatting">
-                          chat
-                        </span>
-                      ) : outgoingRequest === user ? (
-                        <span className="folder-user-status request">
-                          request
-                        </span>
-                      ) : (
-                        <span className="folder-user-status online">
-                          online
-                        </span>
-                      )}
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
+          {msg.createdAt && (
+            <span className="message-time">
+              {" "}
+              {formatMessageTime(msg.createdAt)}
+            </span>
+          )}
         </div>
+      </div>
+    );
+  };
 
-        <button className="logout-btn" onClick={handleLogout}>
-          Гарах
-        </button>
+  /* =========================
+     RENDER ROOM ITEM
+  ========================= */
+
+  const renderRoomItem = (room) => (
+    <button
+      key={room.id}
+      type="button"
+      className={`room-item ${
+        selectedRoom?.id === room.id ? "active-room" : ""
+      }`}
+      onClick={() => handleSelectRoom(room)}
+    >
+      <div className="room-top">
+        <div className="room-name">{room.name}</div>
+        <div className="room-count">{room.count || 0} хүн</div>
       </div>
 
-      {/* MOBILE TAB PANEL */}
-      <div className="mobile-panel">
-        {mobileTab === "groups" && (
-          <div className="mobile-panel-content">
-            <h3>Групп chats</h3>
+      <div className="room-desc">{room.description}</div>
 
-            <div className="mobile-list">
-              {rooms.length === 0 ? (
-                <div className="mobile-empty">Room ачааллаж байна...</div>
+      {selectedRoom?.id === room.id && (
+        <div className="joined-badge">Та энэ room-д байна</div>
+      )}
+    </button>
+  );
+
+  /* =========================
+     RENDER SAVED CHAT ITEM
+  ========================= */
+
+  const renderSavedChatItem = (username) => {
+    const online = onlineUsers.includes(username);
+
+    return (
+      <button
+        key={username}
+        type="button"
+        className={`folder-user-item ${
+          selectedUser === username ? "active-folder-user" : ""
+        }`}
+        onClick={() => handleSelectUser(username)}
+      >
+        <span className="folder-user-icon">💬</span>
+        <span className="folder-user-name">{username}</span>
+        <span
+          className={`folder-user-status ${online ? "online" : "offline"}`}
+        >
+          {online ? "online" : "offline"}
+        </span>
+      </button>
+    );
+  };
+
+  /* =========================
+     RENDER ONLINE USER ITEM
+  ========================= */
+
+  const renderOnlineUserItem = (username) => (
+    <button
+      key={username}
+      type="button"
+      className={`folder-user-item ${
+        selectedUser === username ? "active-folder-user" : ""
+      }`}
+      onClick={() => handleSelectUser(username)}
+    >
+      <span className="folder-user-icon">👥</span>
+      <span className="folder-user-name">{username}</span>
+      <span className="folder-user-status online">online</span>
+    </button>
+  );
+
+  /* =========================
+     RENDER SIDEBAR
+  ========================= */
+
+  const renderSidebar = () => (
+    <aside className="sidebar">
+      <h2>Newfriends.com</h2>
+
+      <div className="cat-row">🐱 🐱 🐱 🐱</div>
+
+      <div className="my-name-box">
+        <p>Таны нэр:</p>
+        <strong>{myName}</strong>
+      </div>
+
+      <div className="sidebar-scroll">
+        <div className="online-title">Групп chats 💭</div>
+
+        <div className="rooms-list">{rooms.map(renderRoomItem)}</div>
+
+        <div className="create-room-box">
+          <div className="online-title create-room-title">
+            Групп үүсгэх ✨
+          </div>
+
+          <div className="create-room-row">
+            <input
+              value={newRoomName}
+              onChange={(event) => setNewRoomName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleCreateRoom();
+              }}
+              placeholder="Групп нэр..."
+            />
+
+            <button type="button" onClick={handleCreateRoom}>
+              +
+            </button>
+          </div>
+        </div>
+
+        <div className="folder-section">
+          <button
+            type="button"
+            className="folder-header"
+            onClick={() => setIsRecentOpen((prev) => !prev)}
+          >
+            <span className={`folder-arrow ${isRecentOpen ? "open" : ""}`}>
+              ›
+            </span>
+            <span className="folder-title">Өмнөх чатнууд</span>
+            <span className="folder-count">{recentChats.length}</span>
+          </button>
+
+          {isRecentOpen && (
+            <div className="folder-content">
+              {recentChats.length > 0 ? (
+                recentChats.map(renderSavedChatItem)
               ) : (
-                rooms.map((room) => {
-                  const isSelected =
-                    chatMode === "room" && selectedRoom === room.id;
-                  const isJoined = joinedRooms.includes(room.id);
-
-                  return (
-                    <button
-                      key={room.id}
-                      className={`mobile-list-item ${
-                        isSelected ? "active" : ""
-                      }`}
-                      onClick={() => handleRoomClick(room.id)}
-                    >
-                      <div>
-                        <strong>{room.name}</strong>
-                        <p>{room.description}</p>
-                        {isJoined && <span>Та энэ Групп-д байна</span>}
-                      </div>
-
-                      <em>{room.count} хүн</em>
-                    </button>
-                  );
-                })
+                <div className="folder-empty">Одоогоор өмнөх чат алга</div>
               )}
             </div>
+          )}
+        </div>
+
+        <div className="folder-section">
+          <button
+            type="button"
+            className="folder-header"
+            onClick={() => setIsOnlineOpen((prev) => !prev)}
+          >
+            <span className={`folder-arrow ${isOnlineOpen ? "open" : ""}`}>
+              ›
+            </span>
+            <span className="folder-title">Онлайн хэрэглэгчид</span>
+            <span className="folder-count">{filteredOnlineUsers.length}</span>
+          </button>
+
+          {isOnlineOpen && (
+            <div className="folder-content">
+              {filteredOnlineUsers.length > 0 ? (
+                filteredOnlineUsers.map(renderOnlineUserItem)
+              ) : (
+                <div className="folder-empty">Одоогоор online хүн алга</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <button type="button" className="logout-btn" onClick={handleLogout}>
+        Гарах
+      </button>
+    </aside>
+  );
+
+  /* =========================
+     RENDER CHAT HEADER
+  ========================= */
+
+  const renderChatHeader = () => {
+    let title = "Group chat сонгоно уу";
+    let subtitle = "Зүүн талын group дээр дарж group chat эхлүүлнэ.";
+
+    if (chatMode === "room" && selectedRoom) {
+      title = selectedRoom.name;
+      subtitle = selectedRoom.description;
+    }
+
+    if (chatMode === "private" && selectedUser) {
+      title = selectedUser;
+      subtitle = `${selectedUser}-тэй private Чат хийж байна.`;
+    }
+
+    return (
+      <div className="chat-header">
+        <div className="chat-header-top">
+          <div>
+            <h1>{title}</h1>
+            <p className="chat-subtitle">{subtitle}</p>
+            <p className="status-text">{statusText}</p>
+          </div>
+
+          <div className="chat-header-actions">
+            {chatMode === "room" && selectedRoom && (
+              <button
+                type="button"
+                className="leave-room-btn"
+                onClick={handleLeaveRoom}
+              >
+                Room-оос гарах
+              </button>
+            )}
+
+            {chatMode === "private" && selectedUser && (
+              <button
+                type="button"
+                className={`save-chat-btn ${
+                  savedChats.includes(selectedUser) ? "saved" : ""
+                }`}
+                onClick={handleToggleSaveChat}
+                title="Энэ чатыг хадгалах"
+              >
+                {savedChats.includes(selectedUser)
+                  ? "❤️ Хадгалсан"
+                  : "🤍 Хадгалах"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {chatMode === "room" && selectedRoom?.users?.length > 0 && (
+          <div className="room-members">
+            {selectedRoom.users.map((user) => (
+              <span key={user} className="member-pill">
+                {user}
+              </span>
+            ))}
           </div>
         )}
 
-        {mobileTab === "create" && (
+        {chatMode === "private" && selectedUser && (
+          <div className="room-members">
+            <span className="member-pill">
+              {isSelectedUserOnline ? "online" : "offline"}
+            </span>
+            <span className="member-pill">
+              {canSendPrivate ? "chatting" : "request хэрэгтэй"}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* =========================
+     RENDER REQUEST BOX
+  ========================= */
+
+  const renderRequestBox = () => {
+    if (!receivedRequest) return null;
+
+    return (
+      <div className="request-box">
+        <p>
+          <strong>{receivedRequest.from}</strong> private chat хийх хүсэлт
+          илгээсэн байна.
+        </p>
+
+        <div className="request-actions">
+          <button type="button" className="accept-btn" onClick={handleAcceptRequest}>
+            Зөвшөөрөх
+          </button>
+
+          <button type="button" className="reject-btn" onClick={handleRejectRequest}>
+            Татгалзах
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  /* =========================
+     RENDER MESSAGES
+  ========================= */
+
+  const renderMessages = () => (
+    <div className="messages-box">
+      {currentMessages.length > 0 ? (
+        currentMessages.map(renderMessage)
+      ) : (
+        <p className="empty-text">
+          {chatMode === "private"
+            ? "Одоогоор private мессеж алга."
+            : "Эхлээд group chat сонгоно уу."}
+        </p>
+      )}
+
+      <div ref={messagesEndRef} />
+    </div>
+  );
+
+  /* =========================
+     RENDER INPUT BAR
+  ========================= */
+
+  const renderInputBar = () => (
+    <div className="message-input-row">
+      <input
+        value={messageInput}
+        onChange={(event) => setMessageInput(event.target.value)}
+        onKeyDown={handleInputKeyDown}
+        disabled={!canSendMessage}
+        placeholder={
+          canSendMessage
+            ? "Энд мессежээ бичнэ..."
+            : chatMode === "private"
+            ? "Private chat эхлүүлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
+            : "Мессеж бичихийн тулд group room-д орно уу."
+        }
+      />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageChange}
+        style={{ display: "none" }}
+      />
+
+      <button
+        type="button"
+        className="media-btn"
+        onClick={handleImageButtonClick}
+        disabled={!canSendMessage}
+      >
+        🖼️
+      </button>
+
+      <button
+        type="button"
+        className={`media-btn ${isRecording ? "recording-btn" : ""}`}
+        onClick={handleVoiceButtonClick}
+        disabled={!canSendMessage}
+      >
+        🎤
+      </button>
+
+      <button
+        type="button"
+        className="send-btn"
+        onClick={handleSendMessage}
+        disabled={!canSendMessage}
+      >
+        Илгээх
+      </button>
+    </div>
+  );
+
+  /* =========================
+     MOBILE PANEL
+  ========================= */
+
+  const renderMobilePanel = () => {
+    if (mobileTab === "chat") return null;
+
+    if (mobileTab === "rooms") {
+      return (
+        <div className="mobile-panel">
           <div className="mobile-panel-content">
-            <h3>Групп үүсгэх ✨</h3>
+            <h3>Групп чат</h3>
+
+            <div className="mobile-list">
+              {rooms.map((room) => (
+                <button
+                  key={room.id}
+                  type="button"
+                  className={`mobile-list-item ${
+                    selectedRoom?.id === room.id ? "active" : ""
+                  }`}
+                  onClick={() => handleSelectRoom(room)}
+                >
+                  <div>
+                    <strong>{room.name}</strong>
+                    <p>{room.description}</p>
+                    {selectedRoom?.id === room.id && <span>Та энэ room-д байна</span>}
+                  </div>
+
+                  <em>{room.count || 0}</em>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (mobileTab === "recent") {
+      return (
+        <div className="mobile-panel">
+          <div className="mobile-panel-content">
+            <h3>Өмнөх чатнууд</h3>
+
+            <div className="mobile-list">
+              {recentChats.length > 0 ? (
+                recentChats.map((username) => (
+                  <button
+                    key={username}
+                    type="button"
+                    className={`mobile-list-item ${
+                      selectedUser === username ? "active" : ""
+                    }`}
+                    onClick={() => handleSelectUser(username)}
+                  >
+                    <div>
+                      <strong>{username}</strong>
+                      <p>Хадгалсан private chat</p>
+                    </div>
+
+                    <em>{onlineUsers.includes(username) ? "online" : "offline"}</em>
+                  </button>
+                ))
+              ) : (
+                <div className="mobile-empty">Одоогоор өмнөх чат алга</div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (mobileTab === "users") {
+      return (
+        <div className="mobile-panel">
+          <div className="mobile-panel-content">
+            <h3>Онлайн хэрэглэгчид</h3>
+
+            <div className="mobile-list">
+              {filteredOnlineUsers.length > 0 ? (
+                filteredOnlineUsers.map((username) => (
+                  <button
+                    key={username}
+                    type="button"
+                    className={`mobile-list-item ${
+                      selectedUser === username ? "active" : ""
+                    }`}
+                    onClick={() => handleSelectUser(username)}
+                  >
+                    <div>
+                      <strong>{username}</strong>
+                      <p>Private chat request явуулах</p>
+                    </div>
+
+                    <em>online</em>
+                  </button>
+                ))
+              ) : (
+                <div className="mobile-empty">Одоогоор online хүн алга</div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (mobileTab === "create") {
+      return (
+        <div className="mobile-panel">
+          <div className="mobile-panel-content">
+            <h3>Групп үүсгэх</h3>
 
             <div className="mobile-create-box">
               <input
-                type="text"
-                placeholder="Групп нэр..."
                 value={newRoomName}
-                onChange={(e) => setNewRoomName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
+                onChange={(event) => setNewRoomName(event.target.value)}
+                placeholder="Групп нэр..."
               />
 
-              <button
-                type="button"
-                onClick={() => {
-                  handleCreateRoom();
-                  setMobileTab("groups");
-                }}
-              >
+              <button type="button" onClick={handleCreateRoom}>
                 Үүсгэх
               </button>
             </div>
           </div>
-        )}
-
-        {mobileTab === "recent" && (
-          <div className="mobile-panel-content">
-            <h3>Өмнөх чатнууд 🔁</h3>
-
-            <div className="mobile-list">
-              {recentChats.length === 0 ? (
-                <div className="mobile-empty">Одоогоор өмнөх чат алга</div>
-              ) : (
-                recentChats.map((user) => (
-                  <button
-                    key={user}
-                    className={`mobile-list-item ${
-                      chatMode === "private" && selectedUser === user
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() => handleUserClick(user)}
-                  >
-                    <div>
-                      <strong>{user}</strong>
-                      <p>
-                        {onlineUsers.includes(user)
-                          ? "Онлайн байна"
-                          : "offline байна"}
-                      </p>
-                    </div>
-
-                    <em>{onlineUsers.includes(user) ? "online" : "offline"}</em>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {mobileTab === "users" && (
-          <div className="mobile-panel-content">
-            <h3>Online users 👥</h3>
-
-            <div className="mobile-list">
-              {onlineUsers.length === 0 ? (
-                <div className="mobile-empty">Одоогоор Онлайн хэрэглэгчид алга</div>
-              ) : (
-                onlineUsers.map((user) => (
-                  <button
-                    key={user}
-                    className={`mobile-list-item ${
-                      chatMode === "private" && selectedUser === user
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() => handleUserClick(user)}
-                  >
-                    <div>
-                      <strong>{user}</strong>
-                      <p>
-                        {activeChatUser === user
-                          ? "чатлаж байна"
-                          : outgoingRequest === user
-                          ? "request явсан"
-                          : "request явуулах"}
-                      </p>
-                    </div>
-
-                    <em>
-                      {activeChatUser === user
-                        ? "chat"
-                        : outgoingRequest === user
-                        ? "request"
-                        : "online"}
-                    </em>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="chat-section">
-        {incomingRequest && (
-          <div className="request-box">
-            <p>
-              <strong>{incomingRequest.from}</strong> тантай чатлах хүсэлт
-              илгээлээ.
-            </p>
-
-            <div className="request-actions">
-              <button
-                className="accept-btn"
-                onClick={() => handleRequestResponse(true)}
-              >
-                Зөвшөөрөх
-              </button>
-
-              <button
-                className="reject-btn"
-                onClick={() => handleRequestResponse(false)}
-              >
-                Татгалзах
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="chat-header">
-          <div className="chat-header-top">
-            <div>
-              <h1>
-                {chatMode === "room"
-                  ? currentRoom
-                    ? currentRoom.name
-                    : "Групп chat сонгоно уу"
-                  : selectedUser
-                  ? selectedUser
-                  : "Хэрэглэгч сонгоно уу"}
-              </h1>
-
-              <p className="chat-subtitle">
-                {chatMode === "room"
-                  ? currentRoom
-                    ? currentRoom.description
-                    : ""
-                  : selectedUser
-                  ? canPrivateChat
-                    ? `\n${selectedUser}-тэй private Чат хийж байна.`
-                    : outgoingRequest === selectedUser
-                    ? `${selectedUser} таны request-ийг зөвшөөрөхийг хүлээж байна.`
-                    : onlineUsers.includes(selectedUser)
-                    ? "Онлайн хэрэглэгчид дээр дарж request явуулна."
-                    : "Энэ хэрэглэгч одоогоор offline байна."
-                  : "Онлайн хэрэглэгчид дээр дарж private Чат эхлүүлнэ."}
-              </p>
-
-              {statusText && <p className="status-text">{statusText}</p>}
-            </div>
-
-            {chatMode === "room" && selectedRoom && (
-              <button className="leave-room-btn" onClick={handleLeaveRoom}>
-                Групп-ээс гарах
-              </button>
-            )}
-          </div>
-
-          {chatMode === "room" && currentRoom && (
-            <div className="room-members">
-              {currentRoom.users?.length > 0 ? (
-                currentRoom.users.map((user) => (
-                  <span key={user} className="member-pill">
-                    {user}
-                  </span>
-                ))
-              ) : (
-                <span className="member-pill">Одоогоор хүн алга</span>
-              )}
-            </div>
-          )}
         </div>
+      );
+    }
 
-        <div className="messages-box">
-          {currentMessages.length > 0 ? (
-            currentMessages.map((msg, index) =>
-              msg.type === "system" || msg.from === "system" ? (
-                <div key={msg.id || index} className="system-message">
-                  {msg.text}
-                </div>
-              ) : (
-                <div
-                  key={msg.id || index}
-                  className={`message-row ${
-                    msg.from === myName ? "my-message" : "their-message"
-                  }`}
-                >
-                  <div className="message-bubble">
-                    <strong>{msg.from}:</strong>{" "}
-                    {msg.type === "image" ? (
-                      <div className="media-message">
-                        <img
-                          src={msg.image}
-                          alt={msg.fileName || "sent image"}
-                          className="chat-image"
-                        />
-                      </div>
-                    ) : msg.type === "audio" ? (
-                      <div className="media-message">
-                        <audio
-                          controls
-                          src={msg.audio}
-                          className="chat-audio"
-                        />
-                      </div>
-                    ) : (
-                      msg.text
-                    )}
-                  </div>
-                </div>
-              )
-            )
-          ) : (
-            <p className="empty-text">
-              {chatMode === "room"
-                ? selectedRoom
-                  ? "Энэ group chat-д одоогоор мессеж алга."
-                  : "Эхлээд group chat сонгоно уу."
-                : selectedUser
-                ? "Одоогоор private мессеж алга."
-                : "Эхлээд online user сонгоно уу."}
-            </p>
-          )}
+    return null;
+  };
 
-          <div ref={messagesEndRef} />
-        </div>
+  /* =========================
+     MOBILE BOTTOM NAV
+  ========================= */
 
-        <div className="message-input-row">
-          <input
-            type="text"
-            placeholder={
-              canChat
-                ? "Энд мессежээ бичнэ..."
-                : chatMode === "room"
-                ? "Мессеж бичихийн тулд Групп-д орно уу."
-                : "Private Чат эхлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
-            }
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            disabled={!canChat}
-          />
+  const renderMobileBottomNav = () => (
+    <nav className="mobile-bottom-nav">
+      <button
+        type="button"
+        className={mobileTab === "rooms" ? "active" : ""}
+        onClick={() => setMobileTab("rooms")}
+      >
+        <span>👥</span>
+        <p>Групп</p>
+      </button>
 
-          <label className={`media-btn ${!canChat ? "disabled-btn" : ""}`}>
-            🖼️
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              disabled={!canChat}
-              hidden
-            />
-          </label>
+      <button
+        type="button"
+        className={mobileTab === "users" ? "active" : ""}
+        onClick={() => setMobileTab("users")}
+      >
+        <span>🧑‍🤝‍🧑</span>
+        <p>Хүмүүс</p>
+      </button>
 
-          {!isRecording ? (
-            <button
-              type="button"
-              className="media-btn"
-              onClick={startRecording}
-              disabled={!canChat}
-            >
-              🎤
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="media-btn recording-btn"
-              onClick={stopRecording}
-            >
-              ⏹
-            </button>
-          )}
+      <button
+        type="button"
+        className={mobileTab === "chat" ? "active" : ""}
+        onClick={() => setMobileTab("chat")}
+      >
+        <span>💬</span>
+        <p>Чат</p>
+      </button>
 
-          <button
-            type="button"
-            className="send-btn"
-            onClick={handleSendMessage}
-            disabled={!canChat}
-          >
-            Илгээх
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        className={mobileTab === "recent" ? "active" : ""}
+        onClick={() => setMobileTab("recent")}
+      >
+        <span>🤍</span>
+        <p>Өмнөх</p>
+      </button>
 
-      {/* MOBILE BOTTOM NAV */}
-      <div className="mobile-bottom-nav">
-        <button
-          type="button"
-          className={mobileTab === "groups" ? "active" : ""}
-          onClick={() => setMobileTab("groups")}
-        >
-          <span>💬</span>
-          <p>Групп</p>
-        </button>
+      <button
+        type="button"
+        className={mobileTab === "create" ? "active" : ""}
+        onClick={() => setMobileTab("create")}
+      >
+        <span>＋</span>
+        <p>Үүсгэх</p>
+      </button>
+    </nav>
+  );
 
-        <button
-          type="button"
-          className={mobileTab === "users" ? "active" : ""}
-          onClick={() => setMobileTab("users")}
-        >
-          <span>👥</span>
-          <p>Users</p>
-        </button>
+  /* =========================
+     PAGE RENDER
+  ========================= */
 
-        <button
-          type="button"
-          className={mobileTab === "chat" ? "active" : ""}
-          onClick={() => setMobileTab("chat")}
-        >
-          <span>✉️</span>
-          <p>Chat</p>
-        </button>
+  return (
+    <div className="chat-page">
+      {renderSidebar()}
 
-        <button
-          type="button"
-          className={mobileTab === "recent" ? "active" : ""}
-          onClick={() => setMobileTab("recent")}
-        >
-          <span>🔁</span>
-          <p>Өмнөх</p>
-        </button>
+      <main className="chat-section">
+        {renderChatHeader()}
+        {renderRequestBox()}
+        {renderMessages()}
+        {renderInputBar()}
+      </main>
 
-        <button
-          type="button"
-          className={mobileTab === "create" ? "active" : ""}
-          onClick={() => setMobileTab("create")}
-        >
-          <span>＋</span>
-          <p>Үүсгэх</p>
-        </button>
-      </div>
+      {renderMobilePanel()}
+      {renderMobileBottomNav()}
     </div>
   );
 }
