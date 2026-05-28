@@ -521,8 +521,8 @@ export default function Chat() {
   return (
     <div className="chat-page">
       <div className="sidebar">
-        <h2>Нээлттэй байгаарай</h2>
-        <div className="cat-row">🐱 🐱 🐱 🐱</div>
+        <h2>Newfriends.com</h2>
+        <div className="cat-row"></div>
 
         <div className="my-name-box">
           <p>Таны нэр:</p>
