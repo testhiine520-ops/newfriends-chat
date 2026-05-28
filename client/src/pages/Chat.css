@@ -2308,3 +2308,189 @@ body {
   color: white !important;
   border-color: #ff4d6d !important;
 }
+
+/* =========================
+   WHITE BACKGROUND THEME FIX
+   Background-уудыг цагаан болгох
+========================= */
+
+html,
+body,
+#root {
+  background: #f4f7fb !important;
+  color: #0f172a !important;
+}
+
+.chat-page {
+  background: #f4f7fb !important;
+  color: #0f172a !important;
+}
+
+/* Зүүн sidebar */
+.sidebar {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ee !important;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Гол chat хэсэг */
+.chat-section {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ee !important;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Chat header */
+.chat-header {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Message box */
+.messages-box {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Input хэсэг */
+.message-input-row {
+  background: #ffffff !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.message-input-row input,
+.create-room-row input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.message-input-row input::placeholder,
+.create-room-row input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Нэрний box */
+.my-name-box {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ee !important;
+}
+
+/* Group room cards */
+.room-item {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ee !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05) !important;
+}
+
+.room-item:hover,
+.active-room {
+  background: #eef5ff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Folder sections */
+.folder-section {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ee !important;
+}
+
+.folder-header {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.folder-content {
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+/* User items */
+.folder-user-item,
+.user-item,
+.user-item-static {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.folder-user-item:hover,
+.user-item:hover {
+  background: #eef5ff !important;
+}
+
+/* Бүх гол бичвэрүүд */
+.sidebar h2,
+.chat-header h1,
+.room-name,
+.folder-title,
+.folder-user-name,
+.my-name-box strong {
+  color: #0f172a !important;
+}
+
+.chat-subtitle,
+.status-text,
+.room-desc,
+.my-name-box p,
+.empty-text,
+.folder-empty {
+  color: #64748b !important;
+}
+
+/* Message bubbles */
+.my-message .message-bubble {
+  background: #e8f1ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #c7dcff !important;
+}
+
+.their-message .message-bubble {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Buttons */
+.send-btn,
+.create-room-row button {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.media-btn {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.logout-btn {
+  background: #fff1f1 !important;
+  color: #ef4444 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.logout-btn:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* Save heart button */
+.save-chat-btn {
+  background: #fff1f5 !important;
+  color: #e11d48 !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+.save-chat-btn.saved {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+  border-color: #e11d48 !important;
+}
