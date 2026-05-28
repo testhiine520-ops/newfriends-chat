@@ -926,7 +926,11 @@ const CLIENT_DIST_PATH = path.join(__dirname, "../client/dist");
 
 app.use(express.static(CLIENT_DIST_PATH));
 
-app.get("*", (req, res) => {
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+    return next();
+  }
+
   res.sendFile(path.join(CLIENT_DIST_PATH, "index.html"));
 });
 
