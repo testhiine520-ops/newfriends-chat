@@ -919,6 +919,18 @@ io.on("connection", (socket) => {
 });
 
 /* =========================
+   SERVE REACT CLIENT
+========================= */
+
+const CLIENT_DIST_PATH = path.join(__dirname, "../client/dist");
+
+app.use(express.static(CLIENT_DIST_PATH));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(CLIENT_DIST_PATH, "index.html"));
+});
+
+/* =========================
    START SERVER
 ========================= */
 
