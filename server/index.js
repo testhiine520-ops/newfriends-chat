@@ -247,11 +247,18 @@ function removeEmptyCustomRooms() {
   });
 }
 
-function createMessage(extra = {}) {
+function createMessage({ from, to = null, roomId = null, type = "text", text = "", image = "", audio = "", fileName = "" }) {
   return {
     id: createId(),
+    from,
+    to,
+    roomId,
+    type,
+    text,
+    image,
+    audio,
+    fileName,
     createdAt: new Date().toISOString(),
-    ...extra,
   };
 }
 
@@ -1028,27 +1035,33 @@ io.on("connection", (socket) => {
     emitRoomsData();
   });
 
-  socket.on("room_message", ({ roomId, text }) => {
-    const username = socket.username;
-    const cleanText = String(text || "").trim();
+  /* =========================
+   ROOM TEXT MESSAGE
+   Group chat message-ийг room дотор байгаа бүх хүнд илгээнэ
+========================= */
 
-    if (!username || !roomId || !cleanText) return;
+socket.on("room_message", ({ roomId, text }) => {
+  const username = socket.username;
 
-    const msg = createMessage({
-      roomId,
-      from: username,
-      type: "text",
-      text: cleanText,
-    });
+  if (!username || !roomId || !text) return;
 
-    addRecentChat(sender, receiver);
-    addRecentChat(receiver, sender);
-    savePrivateMessageIfNeeded(msg);
+  const cleanText = String(text).trim();
 
-    roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
+  if (!cleanText) return;
 
-    io.to(roomId).emit("room_message", msg);
+  const room = getRoomById(roomId);
+
+  if (!room) return;
+
+  const msg = createMessage({
+    from: username,
+    roomId,
+    type: "text",
+    text: cleanText,
   });
+
+  io.to(roomId).emit("room_message", msg);
+});
 
   socket.on("room_image", ({ roomId, image, fileName }) => {
     const username = socket.username;

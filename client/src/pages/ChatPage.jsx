@@ -365,18 +365,19 @@ const loadPrivateHistory = async (partner) => {
       }));
     };
 
-    const appendRoomMessage = (msg) => {
-      if (!msg?.roomId) return;
+    
+    const appendRoomMessage = (message) => {
+  if (!message?.roomId) return;
 
-      setRoomMessages((prev) => {
-        const oldMessages = prev[msg.roomId] || [];
+  setRoomMessages((prev) => {
+    const oldMessages = prev[message.roomId] || [];
 
-        return {
-          ...prev,
-          [msg.roomId]: uniqueMessages([...oldMessages, msg]),
-        };
-      });
+    return {
+      ...prev,
+      [message.roomId]: uniqueMessages([...oldMessages, message]),
     };
+  });
+};
 
     const appendPrivateMessage = (msg) => {
       if (!msg?.from || !msg?.to) return;
