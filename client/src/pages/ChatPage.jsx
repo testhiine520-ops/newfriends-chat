@@ -260,25 +260,54 @@ export default function ChatPage() {
   }, [navigate]);
 
   /* =========================
-     LOAD SAVED CHATS FROM MONGODB
-  ========================= */
+   LOAD RECENT CHATS FROM MONGODB
+   Чаталсан хүмүүс = recentChats
+   Зүрх дарсан хүмүүс = savedChats
+========================= */
 
-  const loadRecentChats = async (username) => {
-    try {
-      const response = await fetch(
-        `${SERVER_URL}/api/users/${encodeURIComponent(username)}/recent-chats`
-      );
+const loadRecentChats = async (username) => {
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/users/${encodeURIComponent(username)}/recent-chats`
+    );
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok && data.ok) {
-        setRecentChats(data.recentChats || []);
-        setSavedChats(data.recentChats || []);
-      }
-    } catch (err) {
-      console.error("Saved chats load error:", err);
+    if (response.ok && data.ok) {
+      setRecentChats(data.recentChats || []);
+      setSavedChats(data.savedChats || []);
     }
-  };
+  } catch (err) {
+    console.error("Recent chats load error:", err);
+  }
+};
+
+/* =========================
+   LOAD SAVED PRIVATE MESSAGE HISTORY
+   Зөвхөн savedChats-д байгаа хүний хадгалсан мессежийг татна
+========================= */
+
+const loadPrivateHistory = async (partner) => {
+  if (!myName || !partner) return;
+
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/users/${encodeURIComponent(
+        myName
+      )}/private-history/${encodeURIComponent(partner)}`
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      setPrivateMessages((prev) =>
+        uniqueMessages([...prev, ...(data.messages || [])])
+      );
+    }
+  } catch (err) {
+    console.error("Private history load error:", err);
+  }
+};
 
   /* =========================
      SOCKET EVENTS
@@ -542,6 +571,7 @@ export default function ChatPage() {
     setSelectedRoom(null);
     setChatMode("private");
     setMobileTab("chat");
+    loadPrivateHistory(username);
 
     if (!onlineUsers.includes(username)) {
       setPrivateActiveUser(null);
@@ -589,46 +619,51 @@ export default function ChatPage() {
   };
 
   /* =========================
-     SAVE PRIVATE CHAT ACTION
-     ❤️ дарсан үед MongoDB-д хадгална
-  ========================= */
+   SAVE PRIVATE CHAT ACTION
+   ❤️ дарвал тухайн хүнтэй хийсэн chat history-г хадгална
+========================= */
 
-  const handleToggleSaveChat = async () => {
-    if (!selectedUser || chatMode !== "private") return;
+const handleToggleSaveChat = async () => {
+  if (!selectedUser || chatMode !== "private") return;
 
-    const isSaved = savedChats.includes(selectedUser);
+  const isSaved = savedChats.includes(selectedUser);
 
-    try {
-      const response = await fetch(
-        `${SERVER_URL}/api/users/${encodeURIComponent(myName)}/saved-chats`,
-        {
-          method: isSaved ? "DELETE" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            partner: selectedUser,
-          }),
-        }
-      );
+  const messagesWithSelectedUser = privateMessages.filter((message) =>
+    isSamePrivatePair(message, myName, selectedUser)
+  );
 
-      const data = await response.json();
-
-      if (response.ok && data.ok) {
-        setSavedChats(data.savedChats || []);
-        setRecentChats(data.savedChats || []);
-
-        setStatusText(
-          isSaved
-            ? `${selectedUser} хадгалсан чатаас хасагдлаа.`
-            : `${selectedUser} хадгалсан чатад нэмэгдлээ.`
-        );
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/users/${encodeURIComponent(myName)}/saved-chats`,
+      {
+        method: isSaved ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          partner: selectedUser,
+          messages: messagesWithSelectedUser,
+        }),
       }
-    } catch (err) {
-      console.error("Save chat error:", err);
-      setStatusText("Chat хадгалах үед алдаа гарлаа.");
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      setRecentChats(data.recentChats || []);
+      setSavedChats(data.savedChats || []);
+
+      setStatusText(
+        isSaved
+          ? `${selectedUser} хадгалсан чатаас хасагдлаа.`
+          : `${selectedUser}-тэй хийсэн chat history хадгалагдлаа.`
+      );
     }
-  };
+  } catch (err) {
+    console.error("Save chat error:", err);
+    setStatusText("Chat хадгалах үед алдаа гарлаа.");
+  }
+};
 
   /* =========================
      SEND TEXT MESSAGE
@@ -933,7 +968,7 @@ export default function ChatPage() {
     <aside className="sidebar">
       <h2>Newfriends.com</h2>
 
-      <div className="cat-row">🐱 🐱 🐱 🐱</div>
+      <div className="cat-row"></div>
 
       <div className="my-name-box">
         <p>Таны нэр:</p>

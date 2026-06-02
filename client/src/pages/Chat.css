@@ -2310,187 +2310,201 @@ body {
 }
 
 /* =========================
-   WHITE BACKGROUND THEME FIX
-   Background-уудыг цагаан болгох
+   LOGIN / REGISTER PAGE
 ========================= */
+
+* {
+  box-sizing: border-box;
+}
 
 html,
 body,
 #root {
-  background: #f4f7fb !important;
-  color: #0f172a !important;
+  min-height: 100%;
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
 }
 
-.chat-page {
-  background: #f4f7fb !important;
-  color: #0f172a !important;
+.home-page {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), transparent 35%),
+    linear-gradient(135deg, #061827 0%, #08213a 45%, #0b2a4a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #ffffff;
 }
 
-/* Зүүн sidebar */
-.sidebar {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #dbe3ee !important;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08) !important;
+.auth-card {
+  width: 100%;
+  max-width: 560px;
+  background: rgba(13, 40, 70, 0.92);
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  border-radius: 26px;
+  padding: 38px 34px 32px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
 }
 
-/* Гол chat хэсэг */
-.chat-section {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #dbe3ee !important;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08) !important;
+.auth-card h1 {
+  margin: 0 0 12px;
+  font-size: 42px;
+  line-height: 1.1;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.04em;
 }
 
-/* Chat header */
-.chat-header {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+.auth-subtitle {
+  margin: 0 0 30px;
+  color: #dbeafe;
+  font-size: 19px;
+  line-height: 1.55;
+  font-weight: 500;
 }
 
-/* Message box */
-.messages-box {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
 }
 
-/* Input хэсэг */
-.message-input-row {
-  background: #ffffff !important;
-  border-top: 1px solid #e2e8f0 !important;
+.auth-form label {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 4px;
 }
 
-.message-input-row input,
-.create-room-row input {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
+.auth-form input {
+  width: 100%;
+  height: 64px;
+  border-radius: 18px;
+  border: 1px solid rgba(191, 219, 254, 0.75);
+  background: #eaf2ff;
+  color: #020617;
+  padding: 0 18px;
+  font-size: 20px;
+  font-weight: 600;
+  outline: none;
+  transition: 0.2s ease;
 }
 
-.message-input-row input::placeholder,
-.create-room-row input::placeholder {
-  color: #94a3b8 !important;
+.auth-form input::placeholder {
+  color: #64748b;
 }
 
-/* Нэрний box */
-.my-name-box {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-  border: 1px solid #dbe3ee !important;
+.auth-form input:focus {
+  border-color: #60a5fa;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22);
 }
 
-/* Group room cards */
-.room-item {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #dbe3ee !important;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05) !important;
+.auth-main-btn {
+  margin-top: 6px;
+  width: 100%;
+  height: 66px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.35);
 }
 
-.room-item:hover,
-.active-room {
-  background: #eef5ff !important;
-  border-color: #3b82f6 !important;
+.auth-main-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.45);
 }
 
-/* Folder sections */
-.folder-section {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #dbe3ee !important;
+.auth-main-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.folder-header {
-  background: #ffffff !important;
-  color: #0f172a !important;
+.auth-switch-btn {
+  margin-top: 18px;
+  width: 100%;
+  min-height: 60px;
+  border-radius: 18px;
+  border: 1px solid rgba(147, 197, 253, 0.38);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
-.folder-content {
-  background: #f8fafc !important;
-  border-top: 1px solid #e2e8f0 !important;
+.auth-switch-btn:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(147, 197, 253, 0.7);
 }
 
-/* User items */
-.folder-user-item,
-.user-item,
-.user-item-static {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
+.auth-error {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  font-size: 15px;
+  font-weight: 700;
 }
 
-.folder-user-item:hover,
-.user-item:hover {
-  background: #eef5ff !important;
+.auth-success {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #bbf7d0;
+  font-size: 15px;
+  font-weight: 700;
 }
 
-/* Бүх гол бичвэрүүд */
-.sidebar h2,
-.chat-header h1,
-.room-name,
-.folder-title,
-.folder-user-name,
-.my-name-box strong {
-  color: #0f172a !important;
-}
+/* =========================
+   MOBILE LOGIN RESPONSIVE
+========================= */
 
-.chat-subtitle,
-.status-text,
-.room-desc,
-.my-name-box p,
-.empty-text,
-.folder-empty {
-  color: #64748b !important;
-}
+@media (max-width: 640px) {
+  .home-page {
+    padding: 18px;
+    align-items: flex-start;
+    padding-top: 70px;
+  }
 
-/* Message bubbles */
-.my-message .message-bubble {
-  background: #e8f1ff !important;
-  color: #1d4ed8 !important;
-  border: 1px solid #c7dcff !important;
-}
+  .auth-card {
+    padding: 30px 22px 24px;
+    border-radius: 24px;
+  }
 
-.their-message .message-bubble {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
-}
+  .auth-card h1 {
+    font-size: 34px;
+  }
 
-/* Buttons */
-.send-btn,
-.create-room-row button {
-  background: #2563eb !important;
-  color: #ffffff !important;
-}
+  .auth-subtitle {
+    font-size: 17px;
+  }
 
-.media-btn {
-  background: #ffffff !important;
-  color: #334155 !important;
-  border: 1px solid #cbd5e1 !important;
-}
+  .auth-form input {
+    height: 58px;
+    font-size: 18px;
+    border-radius: 16px;
+  }
 
-.logout-btn {
-  background: #fff1f1 !important;
-  color: #ef4444 !important;
-  border: 1px solid #fecaca !important;
-}
-
-.logout-btn:hover {
-  background: #ef4444 !important;
-  color: #ffffff !important;
-}
-
-/* Save heart button */
-.save-chat-btn {
-  background: #fff1f5 !important;
-  color: #e11d48 !important;
-  border: 1px solid #fecdd3 !important;
-}
-
-.save-chat-btn.saved {
-  background: #e11d48 !important;
-  color: #ffffff !important;
-  border-color: #e11d48 !important;
+  .auth-main-btn,
+  .auth-switch-btn {
+    height: 58px;
+    font-size: 17px;
+    border-radius: 16px;
+  }
 }

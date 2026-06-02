@@ -1,32 +1,81 @@
-import { useState } from "react";
+/* =========================
+   IMPORTS
+========================= */
+
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../App.css";
+
+/* =========================
+   SERVER CONFIG
+========================= */
 
 const SERVER_URL =
-  import.meta.env.PROD ? window.location.origin : "http://localhost:3001";
+  import.meta.env.VITE_SERVER_URL ||
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost"
+    ? "http://localhost:3001"
+    : window.location.origin);
+
+/* =========================
+   HOME PAGE
+========================= */
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState("login");
+  /* =========================
+     FORM STATE
+  ========================= */
+
+  const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [statusText, setStatusText] = useState("");
+
+  /* =========================
+     UI STATE
+  ========================= */
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  /* =========================
+     SAVE USER AND GO CHAT
+  ========================= */
+
+  const saveUserAndGoChat = (userData) => {
+    const user = userData || {
+      username: username.trim(),
+    };
+
+    localStorage.setItem("newfriends_user", JSON.stringify(user));
+
+    navigate("/chat", { replace: true });
+  };
+
+  /* =========================
+     LOGIN / REGISTER SUBMIT
+  ========================= */
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     const cleanUsername = username.trim();
     const cleanPassword = password.trim();
 
+    setError("");
+    setSuccess("");
+
     if (!cleanUsername || !cleanPassword) {
-      setStatusText("Username болон password оруулна уу.");
+      setError("Username болон password оруулна уу.");
       return;
     }
 
-    try {
-      setLoading(true);
-      setStatusText("");
+    setLoading(true);
 
-      const endpoint = mode === "login" ? "/api/login" : "/api/register";
+    try {
+      const endpoint = isRegister ? "/api/register" : "/api/login";
 
       const response = await fetch(`${SERVER_URL}${endpoint}`, {
         method: "POST",
@@ -42,199 +91,95 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        setStatusText(data.message || "Алдаа гарлаа.");
+        setError(
+          data.message ||
+            (isRegister
+              ? "Бүртгүүлэх үед алдаа гарлаа."
+              : "Нэвтрэх үед алдаа гарлаа.")
+        );
         return;
       }
 
-      localStorage.setItem("chat_name", data.user.username);
-      localStorage.setItem("chat_user_id", data.user.id);
+      setSuccess(
+        isRegister ? "Амжилттай бүртгэгдлээ." : "Амжилттай нэвтэрлээ."
+      );
 
-      navigate("/chat", {
-        state: {
-          name: data.user.username,
-          userId: data.user.id,
-        },
-      });
+      saveUserAndGoChat(data.user);
     } catch (err) {
-      console.error(err);
-      setStatusText("Server-тэй холбогдож чадсангүй.");
+      console.error("Auth error:", err);
+      setError("Server-тэй холбогдож чадсангүй.");
     } finally {
       setLoading(false);
     }
   };
 
-  const switchMode = () => {
-    setMode((prev) => (prev === "login" ? "register" : "login"));
-    setStatusText("");
+  /* =========================
+     SWITCH LOGIN / REGISTER
+  ========================= */
+
+  const handleSwitchMode = () => {
+    setIsRegister((prev) => !prev);
+    setError("");
+    setSuccess("");
   };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        background: "#071a2f",
-        color: "white",
-        padding: "24px",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "440px",
-          background: "#0c223d",
-          border: "1px solid #1f3b5c",
-          borderRadius: "22px",
-          padding: "26px",
-          boxSizing: "border-box",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.25)",
-        }}
-      >
-        <h1
-          style={{
-            marginTop: 0,
-            marginBottom: "8px",
-            fontSize: "30px",
-            lineHeight: 1.2,
-          }}
-        >
-          {mode === "login" ? "Нэвтрэх" : "Бүртгүүлэх"}
-        </h1>
+  /* =========================
+     PAGE RENDER
+  ========================= */
 
-        <p
-          style={{
-            marginTop: 0,
-            marginBottom: "22px",
-            color: "#c9d7e7",
-            fontSize: "16px",
-            lineHeight: 1.5,
-          }}
-        >
-          Нээлттэй харилцааны системд account-аараа нэвтэрч,
-          бусад хэрэглэгчтэй чатлаарай.
+  return (
+    <div className="home-page">
+      <div className="auth-card">
+        <h1>{isRegister ? "Бүртгүүлэх" : "Нэвтрэх"}</h1>
+
+        <p className="auth-subtitle">
+          Нээлттэй харилцааны системд account-аараа нэвтэрч, бусад
+          хэрэглэгчтэй чатлаарай.
         </p>
 
-        <label
-          style={{
-            display: "block",
-            marginBottom: "8px",
-            color: "#dce9f8",
-            fontSize: "15px",
-          }}
-        >
-          Username
-        </label>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label htmlFor="username">Username</label>
 
-        <input
-          type="text"
-          placeholder="Username оруулна уу"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSubmit();
-          }}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "14px",
-            border: "1px solid #2a4a6d",
-            outline: "none",
-            background: "#102b4a",
-            color: "white",
-            marginBottom: "16px",
-            boxSizing: "border-box",
-            fontSize: "16px",
-          }}
-        />
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="Username"
+            autoComplete="username"
+          />
 
-        <label
-          style={{
-            display: "block",
-            marginBottom: "8px",
-            color: "#dce9f8",
-            fontSize: "15px",
-          }}
-        >
-          Password
-        </label>
+          <label htmlFor="password">Password</label>
 
-        <input
-          type="password"
-          placeholder="Password оруулна уу"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSubmit();
-          }}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: "14px",
-            border: "1px solid #2a4a6d",
-            outline: "none",
-            background: "#102b4a",
-            color: "white",
-            marginBottom: "14px",
-            boxSizing: "border-box",
-            fontSize: "16px",
-          }}
-        />
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Password"
+            autoComplete={isRegister ? "new-password" : "current-password"}
+          />
 
-        {statusText && (
-          <p
-            style={{
-              margin: "0 0 14px 0",
-              color: "#ffb3b3",
-              fontSize: "14px",
-              lineHeight: 1.4,
-            }}
-          >
-            {statusText}
-          </p>
-        )}
+          {error && <div className="auth-error">{error}</div>}
+          {success && <div className="auth-success">{success}</div>}
+
+          <button type="submit" className="auth-main-btn" disabled={loading}>
+            {loading
+              ? "Түр хүлээнэ үү..."
+              : isRegister
+              ? "Бүртгүүлэх"
+              : "Нэвтрэх"}
+          </button>
+        </form>
 
         <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "15px",
-            borderRadius: "14px",
-            border: "none",
-            background: loading ? "#5d78b5" : "#2b69ff",
-            color: "white",
-            fontWeight: "700",
-            cursor: loading ? "not-allowed" : "pointer",
-            fontSize: "17px",
-            marginBottom: "14px",
-          }}
+          type="button"
+          className="auth-switch-btn"
+          onClick={handleSwitchMode}
         >
-          {loading
-            ? "Түр хүлээнэ үү..."
-            : mode === "login"
-            ? "Нэвтрэх"
-            : "Бүртгүүлэх"}
-        </button>
-
-        <button
-          onClick={switchMode}
-          style={{
-            width: "100%",
-            padding: "13px",
-            borderRadius: "14px",
-            border: "1px solid #2a4a6d",
-            background: "transparent",
-            color: "#dce9f8",
-            fontWeight: "600",
-            cursor: "pointer",
-            fontSize: "15px",
-          }}
-        >
-          {mode === "login"
-            ? "Account байхгүй юу? Бүртгүүлэх"
-            : "Account байгаа юу? Нэвтрэх"}
+          {isRegister
+            ? "Account байгаа юу? Нэвтрэх"
+            : "Account байхгүй юу? Бүртгүүлэх"}
         </button>
       </div>
     </div>

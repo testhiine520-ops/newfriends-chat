@@ -1,3 +1,6 @@
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
 require("dotenv").config();
 
 const express = require("express");
@@ -85,6 +88,7 @@ function hashPassword(password, salt) {
 
 let mongoClient = null;
 let usersCollection = null;
+let messagesCollection = null;
 
 async function connectMongoDB() {
   try {
@@ -98,6 +102,7 @@ async function connectMongoDB() {
 
     const db = mongoClient.db("newfriends");
     usersCollection = db.collection("users");
+    messagesCollection = db.collection("messages");
 
     console.log("MongoDB connected");
   } catch (err) {
@@ -250,6 +255,7 @@ function createMessage(extra = {}) {
 
 /* =========================
    AUTH API
+   Register/Login хэрэглэгчийг MongoDB дээр хадгална
 ========================= */
 
 app.post("/api/register", async (req, res) => {
@@ -264,13 +270,26 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
+    const usernameLower = username.toLowerCase();
+
+    if (usersCollection) {
+      const existsInMongo = await usersCollection.findOne({ usernameLower });
+
+      if (existsInMongo) {
+        return res.status(409).json({
+          ok: false,
+          message: "Энэ нэр бүртгэлтэй байна.",
+        });
+      }
+    }
+
     const users = readUsers();
 
-    const exists = users.some(
-      (u) => u.username.toLowerCase() === username.toLowerCase()
+    const existsInJson = users.some(
+      (user) => String(user.username || "").toLowerCase() === usernameLower
     );
 
-    if (exists) {
+    if (existsInJson) {
       return res.status(409).json({
         ok: false,
         message: "Энэ нэр бүртгэлтэй байна.",
@@ -283,10 +302,12 @@ app.post("/api/register", async (req, res) => {
     const newUser = {
       id: createId(),
       username,
+      usernameLower,
       salt,
       passwordHash,
       savedChats: [],
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       lastChatAt: null,
     };
 
@@ -294,20 +315,17 @@ app.post("/api/register", async (req, res) => {
     writeUsers(users);
 
     if (usersCollection) {
-      await usersCollection.updateOne(
-        { username },
-        {
-          $setOnInsert: {
-            username,
-            savedChats: [],
-            createdAt: new Date(),
-          },
-          $set: {
-            updatedAt: new Date(),
-          },
-        },
-        { upsert: true }
-      );
+      await usersCollection.insertOne({
+        id: newUser.id,
+        username: newUser.username,
+        usernameLower: newUser.usernameLower,
+        salt: newUser.salt,
+        passwordHash: newUser.passwordHash,
+        savedChats: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastChatAt: null,
+      });
     }
 
     res.json({
@@ -327,7 +345,7 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-app.post("/api/login", (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
     const username = String(req.body.username || "").trim();
     const password = String(req.body.password || "");
@@ -339,33 +357,79 @@ app.post("/api/login", (req, res) => {
       });
     }
 
+    const usernameLower = username.toLowerCase();
+
+    if (usersCollection) {
+      const mongoUser = await usersCollection.findOne({ usernameLower });
+
+      if (mongoUser) {
+        const checkHash = hashPassword(password, mongoUser.salt);
+
+        if (checkHash !== mongoUser.passwordHash) {
+          return res.status(401).json({
+            ok: false,
+            message: "Нэр эсвэл нууц үг буруу байна.",
+          });
+        }
+
+        return res.json({
+          ok: true,
+          user: {
+            id: mongoUser.id,
+            username: mongoUser.username,
+          },
+        });
+      }
+    }
+
     const users = readUsers();
 
-    const user = users.find(
-      (u) => u.username.toLowerCase() === username.toLowerCase()
+    const jsonUser = users.find(
+      (user) => String(user.username || "").toLowerCase() === usernameLower
     );
 
-    if (!user) {
+    if (!jsonUser) {
       return res.status(401).json({
         ok: false,
         message: "Нэр эсвэл нууц үг буруу байна.",
       });
     }
 
-    const checkHash = hashPassword(password, user.salt);
+    const checkHash = hashPassword(password, jsonUser.salt);
 
-    if (checkHash !== user.passwordHash) {
+    if (checkHash !== jsonUser.passwordHash) {
       return res.status(401).json({
         ok: false,
         message: "Нэр эсвэл нууц үг буруу байна.",
       });
+    }
+
+    if (usersCollection) {
+      await usersCollection.updateOne(
+        { usernameLower },
+        {
+          $setOnInsert: {
+            id: jsonUser.id || createId(),
+            username: jsonUser.username,
+            usernameLower,
+            salt: jsonUser.salt,
+            passwordHash: jsonUser.passwordHash,
+            savedChats: jsonUser.savedChats || [],
+            createdAt: new Date(),
+          },
+          $set: {
+            updatedAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
     }
 
     res.json({
       ok: true,
       user: {
-        id: user.id,
-        username: user.username,
+        id: jsonUser.id,
+        username: jsonUser.username,
       },
     });
   } catch (err) {
@@ -377,10 +441,14 @@ app.post("/api/login", (req, res) => {
     });
   }
 });
-
 /* =========================
    SAVED PRIVATE CHATS API
    ❤️ дарахад л хадгална
+========================= */
+
+/* =========================
+   RECENT CHATS API
+   Chat хийсэн хүмүүс энд хадгалагдана
 ========================= */
 
 app.get("/api/users/:username/recent-chats", async (req, res) => {
@@ -392,7 +460,8 @@ app.get("/api/users/:username/recent-chats", async (req, res) => {
 
       return res.json({
         ok: true,
-        recentChats: user?.savedChats || [],
+        recentChats: user?.recentChats || [],
+        savedChats: user?.savedChats || [],
       });
     }
 
@@ -401,22 +470,29 @@ app.get("/api/users/:username/recent-chats", async (req, res) => {
 
     res.json({
       ok: true,
-      recentChats: user?.savedChats || [],
+      recentChats: user?.recentChats || [],
+      savedChats: user?.savedChats || [],
     });
   } catch (err) {
-    console.error("Get saved chats error:", err);
+    console.error("Get recent chats error:", err);
 
     res.status(500).json({
       ok: false,
-      message: "Saved chats авах үед алдаа гарлаа.",
+      message: "Өмнөх чат авах үед алдаа гарлаа.",
     });
   }
 });
+
+/* =========================
+   SAVED CHATS API
+   ❤️ дарсан хүнтэй хийсэн message history хадгална
+========================= */
 
 app.post("/api/users/:username/saved-chats", async (req, res) => {
   try {
     const username = req.params.username;
     const partner = String(req.body.partner || "").trim();
+    const messages = Array.isArray(req.body.messages) ? req.body.messages : [];
 
     if (!partner) {
       return res.status(400).json({
@@ -438,10 +514,12 @@ app.post("/api/users/:username/saved-chats", async (req, res) => {
         {
           $setOnInsert: {
             username,
+            usernameLower: username.toLowerCase(),
             createdAt: new Date(),
           },
           $addToSet: {
             savedChats: partner,
+            recentChats: partner,
           },
           $set: {
             updatedAt: new Date(),
@@ -450,42 +528,21 @@ app.post("/api/users/:username/saved-chats", async (req, res) => {
         { upsert: true }
       );
 
+      await saveExistingMessagesForUser(username, partner, messages);
+
       const user = await usersCollection.findOne({ username });
 
       return res.json({
         ok: true,
+        recentChats: user?.recentChats || [],
         savedChats: user?.savedChats || [],
       });
     }
 
-    const users = readUsers();
-    let user = users.find((u) => u.username === username);
-
-    if (!user) {
-      user = {
-        id: createId(),
-        username,
-        savedChats: [],
-        createdAt: new Date().toISOString(),
-      };
-      users.push(user);
-    }
-
-    if (!Array.isArray(user.savedChats)) {
-      user.savedChats = [];
-    }
-
-    if (!user.savedChats.includes(partner)) {
-      user.savedChats.push(partner);
-    }
-
-    user.updatedAt = new Date().toISOString();
-
-    writeUsers(users);
-
     res.json({
       ok: true,
-      savedChats: user.savedChats,
+      recentChats: [],
+      savedChats: [],
     });
   } catch (err) {
     console.error("Save chat error:", err);
@@ -522,32 +579,32 @@ app.delete("/api/users/:username/saved-chats", async (req, res) => {
         }
       );
 
+      if (messagesCollection) {
+        await messagesCollection.updateMany(
+          {
+            pairKey: getPairKey(username, partner),
+          },
+          {
+            $pull: {
+              savedFor: username,
+            },
+          }
+        );
+      }
+
       const user = await usersCollection.findOne({ username });
 
       return res.json({
         ok: true,
+        recentChats: user?.recentChats || [],
         savedChats: user?.savedChats || [],
       });
     }
 
-    const users = readUsers();
-    const user = users.find((u) => u.username === username);
-
-    if (!user) {
-      return res.json({
-        ok: true,
-        savedChats: [],
-      });
-    }
-
-    user.savedChats = (user.savedChats || []).filter((name) => name !== partner);
-    user.updatedAt = new Date().toISOString();
-
-    writeUsers(users);
-
     res.json({
       ok: true,
-      savedChats: user.savedChats || [],
+      recentChats: [],
+      savedChats: [],
     });
   } catch (err) {
     console.error("Remove saved chat error:", err);
@@ -558,6 +615,194 @@ app.delete("/api/users/:username/saved-chats", async (req, res) => {
     });
   }
 });
+
+/* =========================
+   SAVED PRIVATE MESSAGE HISTORY API
+========================= */
+
+app.get("/api/users/:username/private-history/:partner", async (req, res) => {
+  try {
+    const username = req.params.username;
+    const partner = req.params.partner;
+
+    if (!messagesCollection) {
+      return res.json({
+        ok: true,
+        messages: [],
+      });
+    }
+
+    const messages = await messagesCollection
+      .find({
+        pairKey: getPairKey(username, partner),
+        savedFor: username,
+      })
+      .sort({ createdAt: 1 })
+      .toArray();
+
+    res.json({
+      ok: true,
+      messages: messages.map((msg) => ({
+        id: msg.messageId,
+        from: msg.from,
+        to: msg.to,
+        type: msg.type,
+        text: msg.text,
+        image: msg.image,
+        audio: msg.audio,
+        fileName: msg.fileName,
+        createdAt: msg.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error("Private history error:", err);
+
+    res.status(500).json({
+      ok: false,
+      message: "Private chat history авах үед алдаа гарлаа.",
+    });
+  }
+});
+
+/* =========================
+   PRIVATE CHAT SAVE HELPERS
+========================= */
+
+function getPairKey(userA, userB) {
+  return [userA, userB].sort().join("__");
+}
+
+async function addRecentChat(username, partner) {
+  if (!usersCollection || !username || !partner || username === partner) return;
+
+  await usersCollection.updateOne(
+    { username },
+    {
+      $setOnInsert: {
+        username,
+        usernameLower: username.toLowerCase(),
+        createdAt: new Date(),
+      },
+      $addToSet: {
+        recentChats: partner,
+      },
+      $set: {
+        updatedAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+}
+
+async function getUsersWhoSavedThisChat(from, to) {
+  if (!usersCollection) return [];
+
+  const users = await usersCollection
+    .find({
+      username: { $in: [from, to] },
+    })
+    .toArray();
+
+  const savedFor = [];
+
+  users.forEach((user) => {
+    const savedChats = user.savedChats || [];
+
+    if (user.username === from && savedChats.includes(to)) {
+      savedFor.push(from);
+    }
+
+    if (user.username === to && savedChats.includes(from)) {
+      savedFor.push(to);
+    }
+  });
+
+  return savedFor;
+}
+
+async function savePrivateMessageIfNeeded(message) {
+  try {
+    if (!messagesCollection || !message?.from || !message?.to) return;
+
+    const savedFor = await getUsersWhoSavedThisChat(message.from, message.to);
+
+    if (savedFor.length === 0) return;
+
+    await messagesCollection.updateOne(
+      {
+        messageId: message.id,
+      },
+      {
+        $setOnInsert: {
+          messageId: message.id,
+          pairKey: getPairKey(message.from, message.to),
+          from: message.from,
+          to: message.to,
+          type: message.type || "text",
+          text: message.text || "",
+          image: message.image || "",
+          audio: message.audio || "",
+          fileName: message.fileName || "",
+          createdAt: message.createdAt ? new Date(message.createdAt) : new Date(),
+        },
+        $addToSet: {
+          savedFor: {
+            $each: savedFor,
+          },
+        },
+      },
+      { upsert: true }
+    );
+  } catch (err) {
+    console.error("Save private message if needed error:", err);
+  }
+}
+
+async function saveExistingMessagesForUser(username, partner, messages) {
+  try {
+    if (!messagesCollection || !username || !partner) return;
+
+    const validMessages = (messages || []).filter((msg) => {
+      return (
+        msg &&
+        msg.from &&
+        msg.to &&
+        ((msg.from === username && msg.to === partner) ||
+          (msg.from === partner && msg.to === username))
+      );
+    });
+
+    for (const msg of validMessages) {
+      const messageId = msg.id || createId();
+
+      await messagesCollection.updateOne(
+        {
+          messageId,
+        },
+        {
+          $setOnInsert: {
+            messageId,
+            pairKey: getPairKey(username, partner),
+            from: msg.from,
+            to: msg.to,
+            type: msg.type || "text",
+            text: msg.text || "",
+            image: msg.image || "",
+            audio: msg.audio || "",
+            fileName: msg.fileName || "",
+            createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+          },
+          $addToSet: {
+            savedFor: username,
+          },
+        },
+        { upsert: true }
+      );
+    }
+  } catch (err) {
+    console.error("Save existing messages error:", err);
+  }
+}
 
 /* =========================
    SOCKET.IO
@@ -682,6 +927,10 @@ io.on("connection", (socket) => {
       text: cleanText,
     });
 
+    addRecentChat(sender, receiver);
+    addRecentChat(receiver, sender);
+    savePrivateMessageIfNeeded(msg);
+
     roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
 
     io.to(roomId).emit("room_message", msg);
@@ -700,6 +949,10 @@ io.on("connection", (socket) => {
       fileName: fileName || "image",
     });
 
+    addRecentChat(sender, receiver);
+    addRecentChat(receiver, sender);
+    savePrivateMessageIfNeeded(msg);
+
     roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
 
     io.to(roomId).emit("room_image", msg);
@@ -716,6 +969,10 @@ io.on("connection", (socket) => {
       type: "audio",
       audio,
     });
+
+    addRecentChat(sender, receiver);
+    addRecentChat(receiver, sender);
+    savePrivateMessageIfNeeded(msg);
 
     roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
 
@@ -755,6 +1012,9 @@ io.on("connection", (socket) => {
     if (accepted) {
       activePrivateChats.set(sender, receiver);
       activePrivateChats.set(receiver, sender);
+
+      addRecentChat(sender, receiver);
+      addRecentChat(receiver, sender);
 
       if (senderSocketId) {
         io.to(senderSocketId).emit("chat_request_response", {
@@ -804,6 +1064,10 @@ io.on("connection", (socket) => {
       text: cleanText,
     });
 
+    addRecentChat(sender, receiver);
+    addRecentChat(receiver, sender);
+    savePrivateMessageIfNeeded(msg);
+
     const senderSocketId = activeUsers.get(sender);
     const receiverSocketId = activeUsers.get(receiver);
 
@@ -830,6 +1094,10 @@ io.on("connection", (socket) => {
       fileName: fileName || "image",
     });
 
+    addRecentChat(sender, receiver);
+    addRecentChat(receiver, sender);
+    savePrivateMessageIfNeeded(msg);
+
     const senderSocketId = activeUsers.get(sender);
     const receiverSocketId = activeUsers.get(receiver);
 
@@ -854,6 +1122,10 @@ io.on("connection", (socket) => {
       type: "audio",
       audio,
     });
+
+    addRecentChat(sender, receiver);
+    addRecentChat(receiver, sender);
+    savePrivateMessageIfNeeded(msg);
 
     const senderSocketId = activeUsers.get(sender);
     const receiverSocketId = activeUsers.get(receiver);

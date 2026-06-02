@@ -20,5 +20,58 @@
     ],
     "createdAt": "2026-05-25T04:09:10.371Z",
     "lastChatAt": "2026-05-25T04:47:52.293Z"
+  },
+  {
+    "id": "1779952840300-wj4bi2u20uf",
+    "username": "dorj4",
+    "salt": "7907914b8a5ae071009f578b8bffd75b",
+    "passwordHash": "f7c11c096f81df1b1f43a3d806e4676420dadc1bf1a9b75050608039318e48b0310efbc38525329bbbe9896414d594d01674325c548955eebc70b049e43a6749",
+    "savedChats": [],
+    "createdAt": "2026-05-28T07:20:40.300Z",
+    "lastChatAt": null
+  },
+  {
+    "id": "1779953394010-yrem7ab52j",
+    "username": "dorj5",
+    "usernameLower": "dorj5",
+    "salt": "e0125abcc550a1615caeab39f1a33619",
+    "passwordHash": "37b68086a5debaee73af3fc91deae877f3b6c9274e7384c7fb2bf58e9d3372bf95206ff5e07c5a20ee5e05cdefd91d23e2112565ac3f8bace2ad627108983ddb",
+    "savedChats": [],
+    "createdAt": "2026-05-28T07:29:54.010Z",
+    "updatedAt": "2026-05-28T07:29:54.010Z",
+    "lastChatAt": null
+  },
+  {
+    "id": "1779953513689-iirua7l6cor",
+    "username": "dorj8",
+    "usernameLower": "dorj8",
+    "salt": "ebdf7fa6dfdda972767cb233b21ff3cd",
+    "passwordHash": "a0bdfb71338416cc6710d2a03e862156ea2ad2bad28fe87b7021796a6c0b14325c41968783746c97abf99c5626f2362a738842b25da80c18ca91b0091f5af49a",
+    "savedChats": [],
+    "createdAt": "2026-05-28T07:31:53.689Z",
+    "updatedAt": "2026-05-28T07:31:53.689Z",
+    "lastChatAt": null
+  },
+  {
+    "id": "1779953741036-bopmdzdwytd",
+    "username": "dorj9",
+    "usernameLower": "dorj9",
+    "salt": "35642b2cd4723b9bc6dc13e620280aad",
+    "passwordHash": "f6c6da4ccd8f4a3dea72d5a58de49395b2a519c8501293bf959ca34f847f771b7e06d6822e403f445b759fd694a6c442ba038256016bcd96ac5ca2f682f301ce",
+    "savedChats": [],
+    "createdAt": "2026-05-28T07:35:41.036Z",
+    "updatedAt": "2026-05-28T07:35:41.036Z",
+    "lastChatAt": null
+  },
+  {
+    "id": "1779953836593-4q8eh83k8zp",
+    "username": "testlocal1",
+    "usernameLower": "testlocal1",
+    "salt": "c95029bffa045267f2715b4b5cd3bcd2",
+    "passwordHash": "4ba6b20d27382aa26c52e4e63bb6d5df34f7d5cb4a137c91d8ed691f3d79a6997efa54311927371d15a03bdc403d43996c4754a02058668b532865ae7ac27044",
+    "savedChats": [],
+    "createdAt": "2026-05-28T07:37:16.593Z",
+    "updatedAt": "2026-05-28T07:37:16.593Z",
+    "lastChatAt": null
   }
 ]
