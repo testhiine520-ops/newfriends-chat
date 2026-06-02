@@ -926,6 +926,45 @@ app.patch("/api/reports/:id/resolve", async (req, res) => {
 });
 
 /* =========================
+   ROOM HELPERS
+========================= */
+
+const socketRoomMap = new Map();
+
+function getRoomById(roomId) {
+  return rooms.find((room) => room.id === roomId);
+}
+
+function emitRoomsData() {
+  io.emit(
+    "rooms_data",
+    rooms.map((room) => ({
+      ...room,
+      users: room.users || [],
+      count: room.users ? room.users.length : 0,
+    }))
+  );
+}
+
+function removeUserFromRoom(username, roomId) {
+  const room = getRoomById(roomId);
+
+  if (!room || !username) return;
+
+  room.users = (room.users || []).filter((user) => user !== username);
+  room.count = room.users.length;
+}
+
+function removeUserFromAllRooms(username) {
+  if (!username) return;
+
+  rooms.forEach((room) => {
+    room.users = (room.users || []).filter((user) => user !== username);
+    room.count = room.users.length;
+  });
+}
+
+/* =========================
    SOCKET.IO
 ========================= */
 
@@ -1035,9 +1074,8 @@ io.on("connection", (socket) => {
     emitRoomsData();
   });
 
-  /* =========================
+ /* =========================
    ROOM TEXT MESSAGE
-   Group chat message-ийг room дотор байгаа бүх хүнд илгээнэ
 ========================= */
 
 socket.on("room_message", ({ roomId, text }) => {
@@ -1052,6 +1090,17 @@ socket.on("room_message", ({ roomId, text }) => {
   const room = getRoomById(roomId);
 
   if (!room) return;
+
+  socket.join(roomId);
+  socketRoomMap.set(socket.id, roomId);
+
+  room.users = room.users || [];
+
+  if (!room.users.includes(username)) {
+    room.users.push(username);
+    room.count = room.users.length;
+    emitRoomsData();
+  }
 
   const msg = createMessage({
     from: username,
