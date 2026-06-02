@@ -18,14 +18,6 @@ const SERVER_URL =
     : window.location.origin);
 
 /* =========================
-   ADMIN CONFIG
-   Demo admin account
-========================= */
-
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "admin123";
-
-/* =========================
    ADMIN PAGE
 ========================= */
 
@@ -40,9 +32,12 @@ export default function AdminPage() {
     localStorage.getItem("newfriends_admin") === "true"
   );
 
+  const [authMode, setAuthMode] = useState("login"); // "login" | "register"
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [adminError, setAdminError] = useState("");
+  const [adminSuccess, setAdminSuccess] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
 
   /* =========================
      REPORT STATE
@@ -56,24 +51,96 @@ export default function AdminPage() {
      ADMIN LOGIN
   ========================= */
 
-  const handleAdminLogin = (event) => {
+  const handleAdminLogin = async (event) => {
     event.preventDefault();
 
-    if (
-      adminUsername.trim() === ADMIN_USERNAME &&
-      adminPassword.trim() === ADMIN_PASSWORD
-    ) {
-      localStorage.setItem("newfriends_admin", "true");
-      setIsAdminLoggedIn(true);
-      setAdminError("");
+    const username = adminUsername.trim();
+    const password = adminPassword.trim();
+
+    if (!username || !password) {
+      setAdminError("Admin нэр болон нууц үг хэрэгтэй.");
       return;
     }
 
-    setAdminError("Admin нэр эсвэл нууц үг буруу байна.");
+    setAuthLoading(true);
+    setAdminError("");
+    setAdminSuccess("");
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        localStorage.setItem("newfriends_admin", "true");
+        localStorage.setItem("newfriends_admin_name", data.username || username);
+        setIsAdminLoggedIn(true);
+        setAdminError("");
+        return;
+      }
+
+      setAdminError(data.message || "Admin нэр эсвэл нууц үг буруу байна.");
+    } catch (err) {
+      console.error("Admin login error:", err);
+      setAdminError("Сервертэй холбогдоход алдаа гарлаа.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAdminRegister = async (event) => {
+    event.preventDefault();
+
+    const username = adminUsername.trim();
+    const password = adminPassword.trim();
+
+    if (!username || !password) {
+      setAdminError("Admin нэр болон нууц үг хэрэгтэй.");
+      return;
+    }
+
+    setAuthLoading(true);
+    setAdminError("");
+    setAdminSuccess("");
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/admin/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        setAdminSuccess("Амжилттай бүртгэгдлээ. Одоо нэвтэрнэ үү.");
+        setAuthMode("login");
+        setAdminPassword("");
+        return;
+      }
+
+      setAdminError(data.message || "Admin бүртгэх үед алдаа гарлаа.");
+    } catch (err) {
+      console.error("Admin register error:", err);
+      setAdminError("Сервертэй холбогдоход алдаа гарлаа.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const switchAuthMode = (mode) => {
+    setAuthMode(mode);
+    setAdminError("");
+    setAdminSuccess("");
   };
 
   const handleAdminLogout = () => {
     localStorage.removeItem("newfriends_admin");
+    localStorage.removeItem("newfriends_admin_name");
     setIsAdminLoggedIn(false);
     setSelectedReport(null);
   };
@@ -143,6 +210,8 @@ export default function AdminPage() {
   ========================= */
 
   if (!isAdminLoggedIn) {
+    const isRegister = authMode === "register";
+
     return (
       <div className="admin-login-page">
         <button
@@ -154,13 +223,35 @@ export default function AdminPage() {
         </button>
 
         <div className="admin-login-card">
-          <h1>Admin нэвтрэх</h1>
+          <h1>{isRegister ? "Admin бүртгүүлэх" : "Admin нэвтрэх"}</h1>
 
           <p>
-            Report жагсаалтыг харахын тулд admin эрхээр нэвтэрнэ үү.
+            {isRegister
+              ? "Шинэ admin эрх үүсгэхийн тулд нэр, нууц үгээ оруулна уу."
+              : "Report жагсаалтыг харахын тулд admin эрхээр нэвтэрнэ үү."}
           </p>
 
-          <form className="admin-login-form" onSubmit={handleAdminLogin}>
+          <div className="admin-auth-tabs">
+            <button
+              type="button"
+              className={`admin-auth-tab ${!isRegister ? "active" : ""}`}
+              onClick={() => switchAuthMode("login")}
+            >
+              Нэвтрэх
+            </button>
+            <button
+              type="button"
+              className={`admin-auth-tab ${isRegister ? "active" : ""}`}
+              onClick={() => switchAuthMode("register")}
+            >
+              Бүртгүүлэх
+            </button>
+          </div>
+
+          <form
+            className="admin-login-form"
+            onSubmit={isRegister ? handleAdminRegister : handleAdminLogin}
+          >
             <label>Admin username</label>
 
             <input
@@ -175,12 +266,21 @@ export default function AdminPage() {
               type="password"
               value={adminPassword}
               onChange={(event) => setAdminPassword(event.target.value)}
-              placeholder="admin123"
+              placeholder={isRegister ? "Шинэ нууц үг" : "Нууц үг"}
             />
 
             {adminError && <div className="admin-error">{adminError}</div>}
+            {adminSuccess && (
+              <div className="admin-success">{adminSuccess}</div>
+            )}
 
-            <button type="submit">Нэвтрэх</button>
+            <button type="submit" disabled={authLoading}>
+              {authLoading
+                ? "Түр хүлээнэ үү..."
+                : isRegister
+                ? "Бүртгүүлэх"
+                : "Нэвтрэх"}
+            </button>
           </form>
         </div>
       </div>

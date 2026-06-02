@@ -841,39 +841,66 @@ function getPairKey(userA, userB) {
 }
 
 async function addRecentChat(username, partner) {
-  if (!usersCollection || !username || !partner || username === partner) return;
+  if (!username || !partner || username === partner) return;
 
-  await usersCollection.updateOne(
-    { username },
-    {
-      $setOnInsert: {
-        username,
-        usernameLower: username.toLowerCase(),
-        createdAt: new Date(),
+  if (usersCollection) {
+    await usersCollection.updateOne(
+      { username },
+      {
+        $setOnInsert: {
+          username,
+          usernameLower: username.toLowerCase(),
+          createdAt: new Date(),
+        },
+        $addToSet: {
+          recentChats: partner,
+        },
+        $set: {
+          updatedAt: new Date(),
+        },
       },
-      $addToSet: {
-        recentChats: partner,
-      },
-      $set: {
-        updatedAt: new Date(),
-      },
-    },
-    { upsert: true }
+      { upsert: true }
+    );
+    return;
+  }
+
+  // JSON fallback (MongoDB байхгүй үед)
+  const users = readUsers();
+  const idx = users.findIndex(
+    (u) => String(u.username).toLowerCase() === username.toLowerCase()
   );
+
+  if (idx === -1) return;
+
+  const user = users[idx];
+  user.recentChats = Array.isArray(user.recentChats) ? user.recentChats : [];
+
+  if (!user.recentChats.includes(partner)) {
+    user.recentChats.push(partner);
+    user.updatedAt = new Date().toISOString();
+    writeUsers(users);
+  }
 }
 
 async function getUsersWhoSavedThisChat(from, to) {
-  if (!usersCollection) return [];
+  let sourceUsers;
 
-  const users = await usersCollection
-    .find({
-      username: { $in: [from, to] },
-    })
-    .toArray();
+  if (usersCollection) {
+    sourceUsers = await usersCollection
+      .find({
+        username: { $in: [from, to] },
+      })
+      .toArray();
+  } else {
+    // JSON fallback
+    sourceUsers = readUsers().filter(
+      (u) => u.username === from || u.username === to
+    );
+  }
 
   const savedFor = [];
 
-  users.forEach((user) => {
+  sourceUsers.forEach((user) => {
     const savedChats = user.savedChats || [];
 
     if (user.username === from && savedChats.includes(to)) {
@@ -890,11 +917,20 @@ async function getUsersWhoSavedThisChat(from, to) {
 
 async function savePrivateMessageIfNeeded(message) {
   try {
-    if (!messagesCollection || !message?.from || !message?.to) return;
+    if (!message?.from || !message?.to) return;
 
     const savedFor = await getUsersWhoSavedThisChat(message.from, message.to);
 
     if (savedFor.length === 0) return;
+
+    if (!messagesCollection) {
+      // JSON fallback: тухайн зурвасыг хадгалсан хэрэглэгч бүрд хадгална
+      savedFor.forEach((user) => {
+        const partner = user === message.from ? message.to : message.from;
+        saveMessagesToJson(user, partner, [message]);
+      });
+      return;
+    }
 
     await messagesCollection.updateOne(
       {
@@ -971,6 +1007,139 @@ async function saveExistingMessagesForUser(username, partner, messages) {
     console.error("Save existing messages error:", err);
   }
 }
+
+/* =========================
+   ADMIN AUTH API
+   Admin-ууд тусдаа admins.json (эсвэл MongoDB)-д хадгалагдана
+========================= */
+
+const ADMINS_FILE = path.join(__dirname, "admins.json");
+
+function readAdmins() {
+  try {
+    if (!fs.existsSync(ADMINS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(ADMINS_FILE, "utf8") || "[]");
+  } catch (err) {
+    console.error("Read admins error:", err);
+    return [];
+  }
+}
+
+function writeAdmins(admins) {
+  try {
+    fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2));
+  } catch (err) {
+    console.error("Write admins error:", err);
+  }
+}
+
+app.post("/api/admin/register", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const password = String(req.body.password || "");
+
+    if (!username || !password) {
+      return res.status(400).json({
+        ok: false,
+        message: "Admin нэр болон нууц үг хэрэгтэй.",
+      });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({
+        ok: false,
+        message: "Нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.",
+      });
+    }
+
+    const usernameLower = username.toLowerCase();
+    const admins = readAdmins();
+
+    const exists = admins.some(
+      (a) => String(a.username).toLowerCase() === usernameLower
+    );
+
+    if (exists) {
+      return res.status(409).json({
+        ok: false,
+        message: "Энэ admin нэр бүртгэлтэй байна.",
+      });
+    }
+
+    const salt = createSalt();
+    const passwordHash = hashPassword(password, salt);
+
+    admins.push({
+      id: createId(),
+      username,
+      usernameLower,
+      salt,
+      passwordHash,
+      createdAt: new Date().toISOString(),
+    });
+
+    writeAdmins(admins);
+
+    res.json({
+      ok: true,
+      message: "Admin амжилттай бүртгэгдлээ.",
+      username,
+    });
+  } catch (err) {
+    console.error("Admin register error:", err);
+    res.status(500).json({
+      ok: false,
+      message: "Admin бүртгэх үед алдаа гарлаа.",
+    });
+  }
+});
+
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const password = String(req.body.password || "");
+
+    if (!username || !password) {
+      return res.status(400).json({
+        ok: false,
+        message: "Admin нэр болон нууц үг хэрэгтэй.",
+      });
+    }
+
+    const admins = readAdmins();
+    const admin = admins.find(
+      (a) => String(a.username).toLowerCase() === username.toLowerCase()
+    );
+
+    if (!admin) {
+      return res.status(401).json({
+        ok: false,
+        message: "Admin нэр эсвэл нууц үг буруу байна.",
+      });
+    }
+
+    const hash = hashPassword(password, admin.salt);
+
+    if (hash !== admin.passwordHash) {
+      return res.status(401).json({
+        ok: false,
+        message: "Admin нэр эсвэл нууц үг буруу байна.",
+      });
+    }
+
+    res.json({
+      ok: true,
+      message: "Admin амжилттай нэвтэрлээ.",
+      username: admin.username,
+    });
+  } catch (err) {
+    console.error("Admin login error:", err);
+    res.status(500).json({
+      ok: false,
+      message: "Admin нэвтрэх үед алдаа гарлаа.",
+    });
+  }
+});
 
 /* =========================
    REPORT API

@@ -419,6 +419,8 @@ const loadPrivateHistory = async (partner) => {
       setChatMode("private");
       setPrivateActiveUser(partner);
       setStatusText(`${partner}-тэй chat эхэллээ.`);
+
+      loadRecentChats(myName);
     };
 
     const handlePartnerLeft = ({ username, text }) => {

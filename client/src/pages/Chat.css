@@ -2792,3 +2792,26 @@ body,
 .logout-btn {
   flex-shrink: 0 !important;
 }
+
+
+/* =========================
+   FOLDER TITLE FULL TEXT
+   "..." болохгүй, бүтэн үгээр доош мөрлүүлэх
+========================= */
+.folder-title {
+  flex: 1 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: break-word !important;
+  line-height: 1.2 !important;
+}
+
+.folder-header {
+  align-items: flex-start !important;
+  height: auto !important;
+}
+
+.folder-header .folder-arrow {
+  margin-top: 2px !important;
+}
