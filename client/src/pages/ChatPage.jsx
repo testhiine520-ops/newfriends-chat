@@ -921,7 +921,9 @@ const handleInputKeyDown = (event) => {
         className={`message-row ${isMine ? "my-message" : "their-message"}`}
       >
         <div className="message-bubble">
-          <strong>{msg.from}: </strong>
+          {chatMode !== "private" && (
+            <strong className="message-sender">{msg.from}</strong>
+          )}
 
           {msg.type === "image" && msg.image ? (
             <div className="media-message">
@@ -932,12 +934,11 @@ const handleInputKeyDown = (event) => {
               <audio className="chat-audio" src={msg.audio} controls />
             </div>
           ) : (
-            msg.text
+            <div className="message-text">{msg.text}</div>
           )}
 
           {msg.createdAt && (
             <span className="message-time">
-              {" "}
               {formatMessageTime(msg.createdAt)}
             </span>
           )}

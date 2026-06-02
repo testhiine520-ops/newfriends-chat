@@ -2729,3 +2729,66 @@ body,
     font-size: 15px !important;
   }
 }
+
+/* =========================
+   MESSAGE BUBBLE LAYOUT
+   username дээд зүүн, цаг доод баруун
+========================= */
+.message-bubble {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.message-sender {
+  display: block !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  text-align: left !important;
+  align-self: flex-start !important;
+}
+
+.message-text {
+  text-align: left !important;
+  align-self: flex-start !important;
+  white-space: pre-wrap !important;
+}
+
+.message-bubble .message-time {
+  display: block !important;
+  font-size: 11px !important;
+  opacity: 0.75 !important;
+  align-self: flex-end !important;
+  margin-top: 2px !important;
+}
+
+.message-bubble .media-message {
+  align-self: flex-start !important;
+  width: 100% !important;
+}
+
+
+/* =========================
+   SIDEBAR SCROLL FIX
+   online хэрэглэгчдийн доод хэсэг таслагдахгүй болгох
+========================= */
+.sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.sidebar-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding-bottom: 16px !important;
+}
+
+.sidebar-scroll > .folder-section:last-child {
+  margin-bottom: 8px !important;
+}
+
+.logout-btn {
+  flex-shrink: 0 !important;
+}

@@ -84,5 +84,16 @@
     "createdAt": "2026-06-02T06:50:33.513Z",
     "updatedAt": "2026-06-02T06:50:33.513Z",
     "lastChatAt": null
+  },
+  {
+    "id": "1780391116119-2b0y4bl68si",
+    "username": "dorj7",
+    "usernameLower": "dorj7",
+    "salt": "d510b2269a63b62ee80d608e1b3a5029",
+    "passwordHash": "288ba4ef6ce2875782ff9bcf764d6e066119e87bfaedf71c584a9c47bfa43c3942b92cfbfeb37d408365b88119b828c3a94a9b0a2d62696f5a4a46b3090b05ac",
+    "savedChats": [],
+    "createdAt": "2026-06-02T09:05:16.119Z",
+    "updatedAt": "2026-06-02T09:05:16.119Z",
+    "lastChatAt": null
   }
 ]

@@ -72,6 +72,103 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+/* =========================
+   SAVED MESSAGES JSON FALLBACK
+   MongoDB байхгүй үед чатны зурвасыг файлд хадгална
+========================= */
+
+const SAVED_MESSAGES_FILE = path.join(__dirname, "saved-messages.json");
+
+function readSavedMessages() {
+  try {
+    if (!fs.existsSync(SAVED_MESSAGES_FILE)) return [];
+    const data = fs.readFileSync(SAVED_MESSAGES_FILE, "utf8");
+    return JSON.parse(data || "[]");
+  } catch (err) {
+    console.error("Read saved messages error:", err);
+    return [];
+  }
+}
+
+function writeSavedMessages(list) {
+  try {
+    fs.writeFileSync(SAVED_MESSAGES_FILE, JSON.stringify(list, null, 2));
+  } catch (err) {
+    console.error("Write saved messages error:", err);
+  }
+}
+
+function saveMessagesToJson(username, partner, messages) {
+  if (!username || !partner) return;
+
+  const valid = (messages || []).filter(
+    (msg) =>
+      msg &&
+      msg.from &&
+      msg.to &&
+      ((msg.from === username && msg.to === partner) ||
+        (msg.from === partner && msg.to === username))
+  );
+
+  if (valid.length === 0) return;
+
+  const store = readSavedMessages();
+  const existingIds = new Set(store.map((m) => m.messageId));
+
+  valid.forEach((msg) => {
+    const messageId = msg.id || createId();
+
+    const found = store.find((m) => m.messageId === messageId);
+
+    if (found) {
+      if (!found.savedFor.includes(username)) {
+        found.savedFor.push(username);
+      }
+      return;
+    }
+
+    if (existingIds.has(messageId)) return;
+    existingIds.add(messageId);
+
+    store.push({
+      messageId,
+      pairKey: [username, partner].sort().join("__"),
+      from: msg.from,
+      to: msg.to,
+      type: msg.type || "text",
+      text: msg.text || "",
+      image: msg.image || "",
+      audio: msg.audio || "",
+      fileName: msg.fileName || "",
+      createdAt: msg.createdAt || new Date().toISOString(),
+      savedFor: [username],
+    });
+  });
+
+  writeSavedMessages(store);
+}
+
+function getSavedMessagesFromJson(username, partner) {
+  const pairKey = [username, partner].sort().join("__");
+
+  return readSavedMessages()
+    .filter(
+      (m) => m.pairKey === pairKey && (m.savedFor || []).includes(username)
+    )
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    .map((m) => ({
+      id: m.messageId,
+      from: m.from,
+      to: m.to,
+      type: m.type,
+      text: m.text,
+      image: m.image,
+      audio: m.audio,
+      fileName: m.fileName,
+      createdAt: m.createdAt,
+    }));
+}
+
 function createSalt() {
   return crypto.randomBytes(16).toString("hex");
 }
@@ -209,11 +306,13 @@ function addUserToRoom(username, roomId) {
   const room = rooms.find((r) => r.id === roomId);
   if (!room) return null;
 
-  if (!room.users.includes(username)) {
+  const alreadyInRoom = room.users.includes(username);
+
+  if (!alreadyInRoom) {
     room.users.push(username);
   }
 
-  return room;
+  return { room, alreadyInRoom };
 }
 
 function removeUserFromRoom(username, roomId) {
@@ -548,10 +647,36 @@ app.post("/api/users/:username/saved-chats", async (req, res) => {
       });
     }
 
+    // JSON fallback (MongoDB байхгүй үед)
+    saveMessagesToJson(username, partner, messages);
+
+    const users = readUsers();
+    const userIndex = users.findIndex(
+      (u) => String(u.username).toLowerCase() === username.toLowerCase()
+    );
+
+    if (userIndex !== -1) {
+      const user = users[userIndex];
+      user.savedChats = Array.isArray(user.savedChats) ? user.savedChats : [];
+      user.recentChats = Array.isArray(user.recentChats) ? user.recentChats : [];
+
+      if (!user.savedChats.includes(partner)) user.savedChats.push(partner);
+      if (!user.recentChats.includes(partner)) user.recentChats.push(partner);
+
+      user.updatedAt = new Date().toISOString();
+      writeUsers(users);
+
+      return res.json({
+        ok: true,
+        recentChats: user.recentChats,
+        savedChats: user.savedChats,
+      });
+    }
+
     res.json({
       ok: true,
-      recentChats: [],
-      savedChats: [],
+      recentChats: [partner],
+      savedChats: [partner],
     });
   } catch (err) {
     console.error("Save chat error:", err);
@@ -610,6 +735,40 @@ app.delete("/api/users/:username/saved-chats", async (req, res) => {
       });
     }
 
+    // JSON fallback (MongoDB байхгүй үед)
+    const store = readSavedMessages();
+    const pairKey = [username, partner].sort().join("__");
+    let changed = false;
+
+    store.forEach((m) => {
+      if (m.pairKey === pairKey && (m.savedFor || []).includes(username)) {
+        m.savedFor = m.savedFor.filter((u) => u !== username);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      writeSavedMessages(store.filter((m) => (m.savedFor || []).length > 0));
+    }
+
+    const users = readUsers();
+    const userIndex = users.findIndex(
+      (u) => String(u.username).toLowerCase() === username.toLowerCase()
+    );
+
+    if (userIndex !== -1) {
+      const user = users[userIndex];
+      user.savedChats = (user.savedChats || []).filter((p) => p !== partner);
+      user.updatedAt = new Date().toISOString();
+      writeUsers(users);
+
+      return res.json({
+        ok: true,
+        recentChats: user.recentChats || [],
+        savedChats: user.savedChats,
+      });
+    }
+
     res.json({
       ok: true,
       recentChats: [],
@@ -637,7 +796,7 @@ app.get("/api/users/:username/private-history/:partner", async (req, res) => {
     if (!messagesCollection) {
       return res.json({
         ok: true,
-        messages: [],
+        messages: getSavedMessagesFromJson(username, partner),
       });
     }
 
@@ -1019,9 +1178,11 @@ io.on("connection", (socket) => {
 
     if (!username || !roomId) return;
 
-    const room = addUserToRoom(username, roomId);
+    const result = addUserToRoom(username, roomId);
 
-    if (!room) return;
+    if (!result) return;
+
+    const { room, alreadyInRoom } = result;
 
     socket.join(roomId);
 
@@ -1032,16 +1193,18 @@ io.on("connection", (socket) => {
       messages,
     });
 
-    const systemMsg = createMessage({
-      roomId,
-      from: "system",
-      type: "system",
-      text: `${username} group-д орлоо.`,
-    });
+    if (!alreadyInRoom) {
+      const systemMsg = createMessage({
+        roomId,
+        from: "system",
+        type: "system",
+        text: `${username} group-д орлоо.`,
+      });
 
-    roomMessages[roomId] = [...messages, systemMsg].slice(-100);
+      roomMessages[roomId] = [...messages, systemMsg].slice(-100);
 
-    io.to(roomId).emit("room_system_message", systemMsg);
+      io.to(roomId).emit("room_system_message", systemMsg);
+    }
 
     emitRoomsData();
   });
@@ -1109,6 +1272,8 @@ socket.on("room_message", ({ roomId, text }) => {
     text: cleanText,
   });
 
+  roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
+
   io.to(roomId).emit("room_message", msg);
 });
 
@@ -1124,10 +1289,6 @@ socket.on("room_message", ({ roomId, text }) => {
       image,
       fileName: fileName || "image",
     });
-
-    addRecentChat(sender, receiver);
-    addRecentChat(receiver, sender);
-    savePrivateMessageIfNeeded(msg);
 
     roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
 
@@ -1145,10 +1306,6 @@ socket.on("room_message", ({ roomId, text }) => {
       type: "audio",
       audio,
     });
-
-    addRecentChat(sender, receiver);
-    addRecentChat(receiver, sender);
-    savePrivateMessageIfNeeded(msg);
 
     roomMessages[roomId] = [...(roomMessages[roomId] || []), msg].slice(-100);
 
