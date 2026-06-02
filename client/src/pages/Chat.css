@@ -2616,3 +2616,116 @@ body,
   flex-wrap: wrap !important;
   margin-top: 2px !important;
 }
+
+/* =========================
+   MOVE ROOM / REPORT BUTTONS TO TOP RIGHT
+========================= */
+
+.chat-header {
+  position: relative !important;
+  padding: 28px 32px 22px !important;
+  min-height: 170px !important;
+}
+
+/* Гарчиг, тайлбарын хэсэг товчтой давхцахгүй */
+.chat-header-info {
+  padding-right: 360px !important;
+}
+
+/* Шинэ class ашигласан бол */
+.chat-action-row {
+  position: absolute !important;
+  top: 28px !important;
+  right: 32px !important;
+  width: auto !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin: 0 !important;
+  z-index: 20 !important;
+}
+
+/* Хуучин class үлдсэн бол бас ажиллана */
+.chat-header-actions {
+  position: absolute !important;
+  top: 28px !important;
+  right: 32px !important;
+  width: auto !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin: 0 !important;
+  z-index: 20 !important;
+}
+
+/* Room-оос гарах товч */
+.leave-room-btn {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  padding: 14px 24px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 26px rgba(239, 68, 68, 0.35) !important;
+}
+
+.leave-room-btn:hover {
+  background: #dc2626 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Report товч */
+.report-btn {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  padding: 14px 24px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.35) !important;
+}
+
+.report-btn:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Group-д байгаа хүмүүс товчнуудын доор цэвэрхэн харагдана */
+.room-members {
+  margin-top: 22px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+/* Жижиг дэлгэц дээр товчнууд доошоо орохгүй эвтэйхэн болно */
+@media (max-width: 800px) {
+  .chat-header {
+    padding: 22px 20px !important;
+    min-height: auto !important;
+  }
+
+  .chat-header-info {
+    padding-right: 0 !important;
+  }
+
+  .chat-action-row,
+  .chat-header-actions {
+    position: static !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    margin-top: 14px !important;
+  }
+
+  .leave-room-btn,
+  .report-btn {
+    padding: 12px 18px !important;
+    font-size: 15px !important;
+  }
+}

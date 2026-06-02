@@ -77,3 +77,317 @@
   cursor: pointer;
   font-weight: 700;
 }
+
+/* =========================
+   ADMIN LOGIN PAGE
+========================= */
+
+.admin-login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #061827 0%, #08213a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: white;
+  position: relative;
+}
+
+.admin-back-btn {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  border: 1px solid rgba(147, 197, 253, 0.45);
+  background: rgba(15, 42, 74, 0.9);
+  color: white;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(13, 40, 70, 0.94);
+  border: 1px solid rgba(96, 165, 250, 0.32);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+}
+
+.admin-login-card h1 {
+  margin: 0 0 10px;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.admin-login-card p {
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin-bottom: 22px;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-login-form label {
+  font-weight: 800;
+}
+
+.admin-login-form input {
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid #bfdbfe;
+  padding: 0 16px;
+  font-size: 16px;
+  outline: none;
+}
+
+.admin-login-form button {
+  height: 54px;
+  border: none;
+  border-radius: 14px;
+  background: #2563eb;
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-error {
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+/* =========================
+   ADMIN DASHBOARD
+========================= */
+
+.admin-page {
+  min-height: 100vh;
+  background: #071827;
+  color: white;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+}
+
+.admin-sidebar {
+  background: #0b2238;
+  border-right: 1px solid #1d3b5f;
+  padding: 24px;
+}
+
+.admin-sidebar h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.admin-sidebar p {
+  color: #93c5fd;
+  margin-bottom: 24px;
+}
+
+.admin-sidebar button {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  border: 1px solid #2e5f94;
+  background: #12375c;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-sidebar button:hover {
+  background: #2563eb;
+}
+
+.admin-sidebar .admin-logout-btn {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.admin-main {
+  padding: 28px;
+}
+
+.admin-header {
+  margin-bottom: 24px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.admin-header p {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+}
+
+.admin-content {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 22px;
+}
+
+.report-list-panel,
+.report-detail-panel {
+  background: #0b2238;
+  border: 1px solid #1d3b5f;
+  border-radius: 20px;
+  padding: 18px;
+  min-height: 640px;
+}
+
+.report-list-item {
+  width: 100%;
+  text-align: left;
+  background: #102b49;
+  color: white;
+  border: 1px solid #24486f;
+  border-radius: 15px;
+  padding: 15px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.report-list-item:hover,
+.report-list-item.active {
+  border-color: #60a5fa;
+  background: #153a63;
+}
+
+.report-list-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.report-list-item p {
+  margin: 8px 0;
+  color: #cbd5e1;
+}
+
+.report-list-item small {
+  color: #94a3b8;
+}
+
+.report-status {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.report-status.pending {
+  background: #f59e0b;
+  color: white;
+}
+
+.report-status.resolved {
+  background: #10b981;
+  color: white;
+}
+
+.report-detail-card {
+  background: #102b49;
+  border: 1px solid #24486f;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.report-detail-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #24486f;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.report-detail-top h2 {
+  margin: 0 0 10px;
+  font-size: 28px;
+}
+
+.report-detail-top p {
+  margin: 7px 0;
+  color: #cbd5e1;
+}
+
+.report-message-box {
+  background: #071827;
+  border: 1px solid #1d3b5f;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.report-message-box h3 {
+  margin-top: 0;
+}
+
+.admin-message-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #0b2238;
+  border: 1px solid #1d3b5f;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.admin-message-item strong {
+  color: #93c5fd;
+}
+
+.admin-empty,
+.admin-empty-small {
+  color: #cbd5e1;
+}
+
+.resolve-btn {
+  margin-top: 18px;
+  border: none;
+  border-radius: 14px;
+  background: #10b981;
+  color: white;
+  padding: 13px 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .admin-page {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #1d3b5f;
+  }
+
+  .admin-content {
+    grid-template-columns: 1fr;
+  }
+
+  .report-list-panel,
+  .report-detail-panel {
+    min-height: auto;
+  }
+}

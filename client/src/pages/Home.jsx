@@ -50,7 +50,6 @@ export default function Home() {
     };
 
     localStorage.setItem("newfriends_user", JSON.stringify(user));
-
     navigate("/chat", { replace: true });
   };
 
@@ -129,7 +128,15 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      <div className="auth-card">
+      <button
+        type="button"
+        className="home-admin-btn"
+        onClick={() => navigate("/admin")}
+      >
+        Admin
+      </button>
+
+      <div className="auth-card compact-auth-card">
         <h1>{isRegister ? "Бүртгүүлэх" : "Нэвтрэх"}</h1>
 
         <p className="auth-subtitle">

@@ -246,3 +246,80 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #405466;
 }
+
+/* =========================
+   HOME LOGIN SIZE FIX + ADMIN BUTTON
+========================= */
+
+.compact-auth-card {
+  max-width: 430px !important;
+  padding: 28px 30px 26px !important;
+  border-radius: 24px !important;
+}
+
+.compact-auth-card h1 {
+  font-size: 36px !important;
+  margin-bottom: 12px !important;
+}
+
+.compact-auth-card .auth-subtitle {
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  margin-bottom: 22px !important;
+}
+
+.compact-auth-card .auth-form input {
+  height: 54px !important;
+  font-size: 16px !important;
+  border-radius: 15px !important;
+}
+
+.compact-auth-card .auth-main-btn {
+  height: 56px !important;
+  font-size: 18px !important;
+  border-radius: 15px !important;
+}
+
+.compact-auth-card .auth-switch-btn {
+  min-height: 52px !important;
+  font-size: 16px !important;
+  border-radius: 15px !important;
+}
+
+.home-admin-btn {
+  position: fixed !important;
+  top: 24px !important;
+  left: 24px !important;
+  z-index: 50 !important;
+  border: 1px solid rgba(147, 197, 253, 0.45) !important;
+  background: rgba(15, 42, 74, 0.9) !important;
+  color: #ffffff !important;
+  padding: 12px 20px !important;
+  border-radius: 14px !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25) !important;
+}
+
+.home-admin-btn:hover {
+  background: #2563eb !important;
+}
+
+@media (max-width: 640px) {
+  .compact-auth-card {
+    max-width: 100% !important;
+    padding: 26px 22px 22px !important;
+  }
+
+  .compact-auth-card h1 {
+    font-size: 32px !important;
+  }
+
+  .home-admin-btn {
+    top: 14px !important;
+    left: 14px !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
+}
