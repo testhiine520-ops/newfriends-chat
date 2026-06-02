@@ -467,26 +467,23 @@ app.post("/api/login", async (req, res) => {
 
     const usernameLower = username.toLowerCase();
 
+    // MongoDB-д хэрэглэгч байвал эхлээд шалгана
     if (usersCollection) {
       const mongoUser = await usersCollection.findOne({ usernameLower });
 
-      if (mongoUser) {
+      if (mongoUser && mongoUser.salt && mongoUser.passwordHash) {
         const checkHash = hashPassword(password, mongoUser.salt);
 
-        if (checkHash !== mongoUser.passwordHash) {
-          return res.status(401).json({
-            ok: false,
-            message: "Нэр эсвэл нууц үг буруу байна.",
+        if (checkHash === mongoUser.passwordHash) {
+          return res.json({
+            ok: true,
+            user: {
+              id: mongoUser.id,
+              username: mongoUser.username,
+            },
           });
         }
-
-        return res.json({
-          ok: true,
-          user: {
-            id: mongoUser.id,
-            username: mongoUser.username,
-          },
-        });
+        // MongoDB-д таарсангүй бол JSON-оос шалгана (desync тохиолдол)
       }
     }
 
@@ -512,21 +509,23 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
+    // JSON-д зөв байвал MongoDB-г синк болгоно (дараагийн удаа таарна)
     if (usersCollection) {
       await usersCollection.updateOne(
         { usernameLower },
         {
-          $setOnInsert: {
+          $set: {
             id: jsonUser.id || createId(),
             username: jsonUser.username,
             usernameLower,
             salt: jsonUser.salt,
             passwordHash: jsonUser.passwordHash,
-            savedChats: jsonUser.savedChats || [],
-            createdAt: new Date(),
-          },
-          $set: {
             updatedAt: new Date(),
+          },
+          $setOnInsert: {
+            savedChats: jsonUser.savedChats || [],
+            recentChats: jsonUser.recentChats || [],
+            createdAt: new Date(),
           },
         },
         { upsert: true }

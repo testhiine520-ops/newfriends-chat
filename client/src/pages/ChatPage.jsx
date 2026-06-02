@@ -229,6 +229,7 @@ export default function ChatPage() {
   ========================= */
 
   const [isRecentOpen, setIsRecentOpen] = useState(true);
+  const [isSavedOpen, setIsSavedOpen] = useState(true);
   const [isOnlineOpen, setIsOnlineOpen] = useState(true);
   const [mobileTab, setMobileTab] = useState("chat");
 
@@ -1081,6 +1082,32 @@ const handleInputKeyDown = (event) => {
                 recentChats.map(renderSavedChatItem)
               ) : (
                 <div className="folder-empty">Одоогоор өмнөх чат алга</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="folder-section">
+          <button
+            type="button"
+            className="folder-header"
+            onClick={() => setIsSavedOpen((prev) => !prev)}
+          >
+            <span className={`folder-arrow ${isSavedOpen ? "open" : ""}`}>
+              ›
+            </span>
+            <span className="folder-title">Хадгалсан чатууд</span>
+            <span className="folder-count">{savedChats.length}</span>
+          </button>
+
+          {isSavedOpen && (
+            <div className="folder-content">
+              {savedChats.length > 0 ? (
+                savedChats.map(renderSavedChatItem)
+              ) : (
+                <div className="folder-empty">
+                  Одоогоор хадгалсан чат алга
+                </div>
               )}
             </div>
           )}
