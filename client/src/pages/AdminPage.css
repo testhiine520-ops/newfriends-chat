@@ -1,0 +1,79 @@
+.admin-page {
+  min-height: 100vh;
+  background: #0b1220;
+  color: white;
+  padding: 30px;
+}
+
+.admin-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.admin-container h1 {
+  margin-bottom: 10px;
+}
+
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.report-card {
+  background: #13213a;
+  border: 1px solid #25406b;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.report-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-badge.pending {
+  background: #f59e0b;
+  color: white;
+}
+
+.status-badge.resolved {
+  background: #10b981;
+  color: white;
+}
+
+.report-messages {
+  margin-top: 12px;
+  background: #0e1a2d;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.report-messages ul {
+  margin: 10px 0 0 16px;
+}
+
+.report-messages li {
+  margin-bottom: 6px;
+}
+
+.resolve-btn {
+  margin-top: 14px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+}

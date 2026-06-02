@@ -2508,3 +2508,111 @@ body,
     border-radius: 16px;
   }
 }
+
+/* =========================
+   REPORT BUTTON
+========================= */
+
+.report-btn {
+  border: none !important;
+  border-radius: 14px !important;
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  padding: 12px 18px !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.28) !important;
+  transition: 0.2s ease !important;
+}
+
+.report-btn:hover {
+  background: #dc2626 !important;
+  transform: translateY(-1px) !important;
+}
+
+.chat-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+/* =========================
+   HEADER ACTION BUTTONS FIX
+   Room-оос гарах + Report товчны байрлал, өнгө
+========================= */
+
+.chat-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+}
+
+.chat-header-info {
+  width: 100% !important;
+}
+
+.chat-action-row {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin-top: 4px !important;
+  margin-bottom: 6px !important;
+}
+
+.leave-room-btn {
+  border: none !important;
+  border-radius: 16px !important;
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  padding: 14px 24px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 26px rgba(239, 68, 68, 0.32) !important;
+  transition: 0.2s ease !important;
+}
+
+.leave-room-btn:hover {
+  background: #dc2626 !important;
+  transform: translateY(-1px) !important;
+}
+
+.report-btn {
+  border: none !important;
+  border-radius: 16px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  padding: 14px 24px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.35) !important;
+  transition: 0.2s ease !important;
+}
+
+.report-btn:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px) !important;
+}
+
+.save-chat-btn {
+  border-radius: 16px !important;
+  padding: 14px 24px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+}
+
+.room-members {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  margin-top: 2px !important;
+}

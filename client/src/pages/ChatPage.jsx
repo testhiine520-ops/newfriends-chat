@@ -513,7 +513,7 @@ const loadPrivateHistory = async (partner) => {
     privateActiveUser === selectedUser &&
     isSelectedUserOnline;
 
-  const canSendRoom = chatMode === "room" && selectedRoom;
+  const canSendRoom = chatMode === "room" && Boolean(selectedRoom?.id);
 
   const canSendMessage = canSendRoom || canSendPrivate;
 
@@ -665,50 +665,107 @@ const handleToggleSaveChat = async () => {
   }
 };
 
+/* =========================
+   REPORT CHAT ACTION
+   Одоогийн chat-ийн сүүлийн message-үүдийг admin руу илгээнэ
+========================= */
+
+const handleReportChat = async () => {
+  try {
+    const target =
+      chatMode === "private"
+        ? selectedUser
+        : selectedRoom?.name || "Group сонгоогүй";
+
+    const messagesToReport =
+      chatMode === "private"
+        ? privateMessages
+            .filter((message) =>
+              isSamePrivatePair(message, myName, selectedUser)
+            )
+            .slice(-20)
+        : currentMessages.slice(-20);
+
+    const response = await fetch(`${SERVER_URL}/api/reports`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        reporter: myName,
+        chatType: chatMode === "private" ? "private" : "group",
+        target,
+        messages: messagesToReport,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      setStatusText("Report admin руу амжилттай илгээгдлээ.");
+      alert("Report admin руу амжилттай илгээгдлээ.");
+    } else {
+      alert(data.message || "Report илгээх үед алдаа гарлаа.");
+    }
+  } catch (err) {
+    console.error("Report error:", err);
+    alert("Report илгээх үед алдаа гарлаа.");
+  }
+};
+
   /* =========================
-     SEND TEXT MESSAGE
-  ========================= */
+   SEND TEXT MESSAGE
+========================= */
 
-  const handleSendMessage = () => {
-    const cleanText = messageInput.trim();
+const handleSendMessage = () => {
+  const cleanText = messageInput.trim();
 
-    if (!cleanText) return;
+  if (!cleanText) return;
 
-    if (chatMode === "room") {
-      if (!selectedRoom) return;
-
-      socket.emit("room_message", {
-        roomId: selectedRoom.id,
-        text: cleanText,
-      });
-
-      setMessageInput("");
+  if (chatMode === "room") {
+    if (!selectedRoom?.id) {
+      setStatusText("Эхлээд group chat сонгоно уу.");
       return;
     }
 
-    if (chatMode === "private") {
-      if (!selectedUser) return;
+    socket.emit("join_room", {
+      roomId: selectedRoom.id,
+    });
 
-      if (!canSendPrivate) {
-        setStatusText("Private chat эхлүүлэхийн тулд request зөвшөөрөгдөх хэрэгтэй.");
-        return;
-      }
+    socket.emit("room_message", {
+      roomId: selectedRoom.id,
+      text: cleanText,
+    });
 
-      socket.emit("private_message", {
-        from: myName,
-        to: selectedUser,
-        text: cleanText,
-      });
+    setMessageInput("");
+    return;
+  }
 
-      setMessageInput("");
+  if (chatMode === "private") {
+    if (!selectedUser) return;
+
+    if (!canSendPrivate) {
+      setStatusText(
+        "Private chat эхлүүлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
+      );
+      return;
     }
-  };
 
-  const handleInputKeyDown = (event) => {
-    if (event.key === "Enter") {
-      handleSendMessage();
-    }
-  };
+    socket.emit("private_message", {
+      from: myName,
+      to: selectedUser,
+      text: cleanText,
+    });
+
+    setMessageInput("");
+  }
+};
+
+const handleInputKeyDown = (event) => {
+  if (event.key === "Enter") {
+    handleSendMessage();
+  }
+};
 
   /* =========================
      SEND IMAGE MESSAGE
@@ -1057,83 +1114,89 @@ const handleToggleSaveChat = async () => {
   );
 
   /* =========================
-     RENDER CHAT HEADER
-  ========================= */
+   RENDER CHAT HEADER
+========================= */
 
-  const renderChatHeader = () => {
-    let title = "Group chat сонгоно уу";
-    let subtitle = "Зүүн талын group дээр дарж group chat эхлүүлнэ.";
+const renderChatHeader = () => {
+  let title = "Group chat сонгоно уу";
+  let subtitle = "Зүүн талын group дээр дарж group chat эхлүүлнэ.";
 
-    if (chatMode === "room" && selectedRoom) {
-      title = selectedRoom.name;
-      subtitle = selectedRoom.description;
-    }
+  if (chatMode === "room" && selectedRoom) {
+    title = selectedRoom.name;
+    subtitle = selectedRoom.description;
+  }
 
-    if (chatMode === "private" && selectedUser) {
-      title = selectedUser;
-      subtitle = `${selectedUser}-тэй private Чат хийж байна.`;
-    }
+  if (chatMode === "private" && selectedUser) {
+    title = selectedUser;
+    subtitle = `${selectedUser}-тэй private Чат хийж байна.`;
+  }
 
-    return (
-      <div className="chat-header">
-        <div className="chat-header-top">
-          <div>
-            <h1>{title}</h1>
-            <p className="chat-subtitle">{subtitle}</p>
-            <p className="status-text">{statusText}</p>
-          </div>
+  return (
+    <div className="chat-header">
+      <div className="chat-header-info">
+        <h1>{title}</h1>
+        <p className="chat-subtitle">{subtitle}</p>
+        <p className="status-text">{statusText}</p>
+      </div>
 
-          <div className="chat-header-actions">
-            {chatMode === "room" && selectedRoom && (
-              <button
-                type="button"
-                className="leave-room-btn"
-                onClick={handleLeaveRoom}
-              >
-                Room-оос гарах
-              </button>
-            )}
-
-            {chatMode === "private" && selectedUser && (
-              <button
-                type="button"
-                className={`save-chat-btn ${
-                  savedChats.includes(selectedUser) ? "saved" : ""
-                }`}
-                onClick={handleToggleSaveChat}
-                title="Энэ чатыг хадгалах"
-              >
-                {savedChats.includes(selectedUser)
-                  ? "❤️ Хадгалсан"
-                  : "🤍 Хадгалах"}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {chatMode === "room" && selectedRoom?.users?.length > 0 && (
-          <div className="room-members">
-            {selectedRoom.users.map((user) => (
-              <span key={user} className="member-pill">
-                {user}
-              </span>
-            ))}
-          </div>
+      <div className="chat-action-row">
+        {chatMode === "room" && selectedRoom && (
+          <button
+            type="button"
+            className="leave-room-btn"
+            onClick={handleLeaveRoom}
+          >
+            Room-оос гарах
+          </button>
         )}
 
         {chatMode === "private" && selectedUser && (
-          <div className="room-members">
-            <span className="member-pill">
-              {isSelectedUserOnline ? "online" : "offline"}
-            </span>
-            <span className="member-pill">
-              {canSendPrivate ? "chatting" : "request хэрэгтэй"}
-            </span>
-          </div>
+          <button
+            type="button"
+            className={`save-chat-btn ${
+              savedChats.includes(selectedUser) ? "saved" : ""
+            }`}
+            onClick={handleToggleSaveChat}
+            title="Энэ чатыг хадгалах"
+          >
+            {savedChats.includes(selectedUser)
+              ? "❤️ Хадгалсан"
+              : "🤍 Хадгалах"}
+          </button>
         )}
+
+        <button
+          type="button"
+          className="report-btn"
+          onClick={handleReportChat}
+        >
+          Report
+        </button>
       </div>
-    );
-  };
+
+      {chatMode === "room" && selectedRoom?.users?.length > 0 && (
+        <div className="room-members">
+          {selectedRoom.users.map((user) => (
+            <span key={user} className="member-pill">
+              {user}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {chatMode === "private" && selectedUser && (
+        <div className="room-members">
+          <span className="member-pill">
+            {isSelectedUserOnline ? "online" : "offline"}
+          </span>
+          <span className="member-pill">
+            {canSendPrivate ? "chatting" : "request хэрэгтэй"}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
 
   /* =========================
      RENDER REQUEST BOX
@@ -1172,10 +1235,12 @@ const handleToggleSaveChat = async () => {
         currentMessages.map(renderMessage)
       ) : (
         <p className="empty-text">
-          {chatMode === "private"
-            ? "Одоогоор private мессеж алга."
-            : "Эхлээд group chat сонгоно уу."}
-        </p>
+  {chatMode === "private"
+    ? "Одоогоор private мессеж алга."
+    : selectedRoom
+    ? "Энэ group-д одоогоор мессеж алга. Эхний мессежээ бичээрэй."
+    : "Эхлээд group chat сонгоно уу."}
+</p>
       )}
 
       <div ref={messagesEndRef} />

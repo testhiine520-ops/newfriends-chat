@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { Server } = require("socket.io");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const app = express();
 const server = http.createServer(app);
@@ -89,6 +89,7 @@ function hashPassword(password, salt) {
 let mongoClient = null;
 let usersCollection = null;
 let messagesCollection = null;
+let reportsCollection = null;
 
 async function connectMongoDB() {
   try {
@@ -103,6 +104,7 @@ async function connectMongoDB() {
     const db = mongoClient.db("newfriends");
     usersCollection = db.collection("users");
     messagesCollection = db.collection("messages");
+    reportsCollection = db.collection("reports");
 
     console.log("MongoDB connected");
   } catch (err) {
@@ -803,6 +805,118 @@ async function saveExistingMessagesForUser(username, partner, messages) {
     console.error("Save existing messages error:", err);
   }
 }
+
+/* =========================
+   REPORT API
+   User report-ууд MongoDB reports collection-д хадгалагдана
+========================= */
+
+app.post("/api/reports", async (req, res) => {
+  try {
+    const { reporter, chatType, target, messages } = req.body;
+
+    if (!reporter || !chatType || !target) {
+      return res.status(400).json({
+        ok: false,
+        message: "Report илгээх мэдээлэл дутуу байна.",
+      });
+    }
+
+    if (!reportsCollection) {
+      return res.status(500).json({
+        ok: false,
+        message: "MongoDB reports collection холбогдоогүй байна.",
+      });
+    }
+
+    const reportDoc = {
+      reporter,
+      chatType,
+      target,
+      messages: Array.isArray(messages) ? messages : [],
+      status: "pending",
+      createdAt: new Date(),
+    };
+
+    const result = await reportsCollection.insertOne(reportDoc);
+
+    res.json({
+      ok: true,
+      message: "Report амжилттай илгээгдлээ.",
+      insertedId: result.insertedId,
+    });
+  } catch (err) {
+    console.error("Create report error:", err);
+
+    res.status(500).json({
+      ok: false,
+      message: "Report илгээх үед server алдаа гарлаа.",
+    });
+  }
+});
+
+app.get("/api/reports", async (req, res) => {
+  try {
+    if (!reportsCollection) {
+      return res.json({
+        ok: true,
+        reports: [],
+      });
+    }
+
+    const reports = await reportsCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({
+      ok: true,
+      reports,
+    });
+  } catch (err) {
+    console.error("Get reports error:", err);
+
+    res.status(500).json({
+      ok: false,
+      message: "Report жагсаалт авах үед алдаа гарлаа.",
+    });
+  }
+});
+
+app.patch("/api/reports/:id/resolve", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!reportsCollection) {
+      return res.status(500).json({
+        ok: false,
+        message: "MongoDB reports collection холбогдоогүй байна.",
+      });
+    }
+
+    await reportsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          status: "resolved",
+          resolvedAt: new Date(),
+        },
+      }
+    );
+
+    res.json({
+      ok: true,
+      message: "Report resolved боллоо.",
+    });
+  } catch (err) {
+    console.error("Resolve report error:", err);
+
+    res.status(500).json({
+      ok: false,
+      message: "Report шийдвэрлэх үед алдаа гарлаа.",
+    });
+  }
+});
 
 /* =========================
    SOCKET.IO
