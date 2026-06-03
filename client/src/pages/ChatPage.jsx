@@ -407,7 +407,7 @@ const loadPrivateHistory = async (partner) => {
       if (Array.isArray(data)) {
         setRooms(data);
 
-        // Сонгосон room-ийн гишүүдийг шинэчилнэ (шинэ хүн орох/гарах)
+        // Сонгосон группийн гишүүдийг шинэчилнэ (шинэ хүн орох/гарах)
         setSelectedRoom((prev) => {
           if (!prev) return prev;
           const updated = data.find((room) => room.id === prev.id);
@@ -1396,7 +1396,7 @@ const renderChatHeader = () => {
             className="leave-room-btn"
             onClick={handleLeaveRoom}
           >
-            Room-оос гарах
+            Группээс гарах
           </button>
         )}
 
@@ -1570,7 +1570,7 @@ const renderChatHeader = () => {
                   <div>
                     <strong>{room.name}</strong>
                     <p>{room.description}</p>
-                    {selectedRoom?.id === room.id && <span>Та энэ room-д байна</span>}
+                    {selectedRoom?.id === room.id && <span>Та энэ группт байна</span>}
                   </div>
 
                   <em>{room.count || 0}</em>
