@@ -380,6 +380,13 @@ app.post("/api/register", async (req, res) => {
 
     const usernameLower = username.toLowerCase();
 
+    if (isUserBanned(username)) {
+      return res.status(403).json({
+        ok: false,
+        message: "Энэ нэр админ тарафаас хаагдсан байна.",
+      });
+    }
+
     if (usersCollection) {
       const existsInMongo = await usersCollection.findOne({ usernameLower });
 
@@ -466,6 +473,14 @@ app.post("/api/login", async (req, res) => {
     }
 
     const usernameLower = username.toLowerCase();
+
+    // Хүчээр гаргасан хэрэглэгчийг нэвтрүүлэхгүй
+    if (isUserBanned(username)) {
+      return res.status(403).json({
+        ok: false,
+        message: "Таны эрх админ тарафаас хаагдсан байна.",
+      });
+    }
 
     // MongoDB-д хэрэглэгч байвал эхлээд шалгана
     if (usersCollection) {
@@ -1032,6 +1047,159 @@ function writeAdmins(admins) {
   }
 }
 
+/* =========================
+   BANNED USERS (хүчээр гаргасан хэрэглэгчид)
+========================= */
+
+const BANNED_FILE = path.join(__dirname, "banned-users.json");
+
+function readBanned() {
+  try {
+    if (!fs.existsSync(BANNED_FILE)) return [];
+    return JSON.parse(fs.readFileSync(BANNED_FILE, "utf8") || "[]");
+  } catch (err) {
+    console.error("Read banned error:", err);
+    return [];
+  }
+}
+
+function writeBanned(list) {
+  try {
+    fs.writeFileSync(BANNED_FILE, JSON.stringify(list, null, 2));
+  } catch (err) {
+    console.error("Write banned error:", err);
+  }
+}
+
+function isUserBanned(username) {
+  if (!username) return false;
+  const lower = String(username).toLowerCase();
+  return readBanned().some((b) => String(b.username).toLowerCase() === lower);
+}
+
+function forceLogoutUser(username) {
+  if (!username) return;
+
+  // Бүх room-оос хасаж, "гарлаа" мэдэгдэл илгээнэ
+  rooms.forEach((room) => {
+    if ((room.users || []).includes(username)) {
+      room.users = room.users.filter((u) => u !== username);
+      room.count = room.users.length;
+
+      const systemMsg = createMessage({
+        roomId: room.id,
+        from: "system",
+        type: "system",
+        text: `${username} group-оос гарлаа.`,
+      });
+
+      roomMessages[room.id] = [
+        ...(roomMessages[room.id] || []),
+        systemMsg,
+      ].slice(-100);
+
+      io.to(room.id).emit("room_system_message", systemMsg);
+    }
+  });
+
+  removeEmptyCustomRooms();
+
+  const socketId = activeUsers.get(username);
+  if (socketId) {
+    io.to(socketId).emit("force_logout", {
+      reason: "Та админ тарафаас системээс гаргагдлаа.",
+    });
+    const target = io.sockets.sockets.get(socketId);
+    if (target) {
+      setTimeout(() => target.disconnect(true), 500);
+    }
+  }
+
+  activeUsers.delete(username);
+
+  emitUsersList();
+  emitRoomsData();
+}
+
+// Banned жагсаалт авах
+app.get("/api/admin/banned", async (req, res) => {
+  try {
+    res.json({ ok: true, banned: readBanned() });
+  } catch (err) {
+    console.error("Get banned error:", err);
+    res.status(500).json({ ok: false, message: "Алдаа гарлаа." });
+  }
+});
+
+// Хэрэглэгчийг хүчээр гаргах (ban)
+app.post("/api/admin/ban", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const reason = String(req.body.reason || "").trim();
+
+    if (!username) {
+      return res.status(400).json({
+        ok: false,
+        message: "Хэрэглэгчийн нэр хэрэгтэй.",
+      });
+    }
+
+    const banned = readBanned();
+    const lower = username.toLowerCase();
+
+    if (!banned.some((b) => String(b.username).toLowerCase() === lower)) {
+      banned.push({
+        username,
+        reason: reason || "Report-ын улмаас гаргагдсан.",
+        bannedAt: new Date().toISOString(),
+      });
+      writeBanned(banned);
+    }
+
+    // Онлайн байвал шууд гаргана
+    forceLogoutUser(username);
+
+    res.json({
+      ok: true,
+      message: `${username} системээс гаргагдлаа.`,
+      banned: readBanned(),
+    });
+  } catch (err) {
+    console.error("Ban user error:", err);
+    res.status(500).json({ ok: false, message: "Гаргах үед алдаа гарлаа." });
+  }
+});
+
+// Ban-г буцаах (unban)
+app.post("/api/admin/unban", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+
+    if (!username) {
+      return res.status(400).json({
+        ok: false,
+        message: "Хэрэглэгчийн нэр хэрэгтэй.",
+      });
+    }
+
+    const lower = username.toLowerCase();
+    const banned = readBanned().filter(
+      (b) => String(b.username).toLowerCase() !== lower
+    );
+
+    writeBanned(banned);
+
+    res.json({
+      ok: true,
+      message: `${username}-ийн эрх сэргээгдлээ.`,
+      banned,
+    });
+  } catch (err) {
+    console.error("Unban user error:", err);
+    res.status(500).json({ ok: false, message: "Сэргээх үед алдаа гарлаа." });
+  }
+});
+
 app.post("/api/admin/register", async (req, res) => {
   try {
     const username = String(req.body.username || "").trim();
@@ -1147,7 +1315,8 @@ app.post("/api/admin/login", async (req, res) => {
 
 app.post("/api/reports", async (req, res) => {
   try {
-    const { reporter, chatType, target, messages } = req.body;
+    const { reporter, chatType, target, messages, reason, roomName } =
+      req.body;
 
     if (!reporter || !chatType || !target) {
       return res.status(400).json({
@@ -1167,6 +1336,8 @@ app.post("/api/reports", async (req, res) => {
       reporter,
       chatType,
       target,
+      reason: String(reason || "").trim(),
+      roomName: String(roomName || "").trim(),
       messages: Array.isArray(messages) ? messages : [],
       status: "pending",
       createdAt: new Date(),
@@ -1252,9 +1423,32 @@ app.patch("/api/reports/:id/resolve", async (req, res) => {
   }
 });
 
-/* =========================
-   ROOM HELPERS
-========================= */
+app.delete("/api/reports/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!reportsCollection) {
+      return res.status(500).json({
+        ok: false,
+        message: "MongoDB reports collection холбогдоогүй байна.",
+      });
+    }
+
+    await reportsCollection.deleteOne({ _id: new ObjectId(id) });
+
+    res.json({
+      ok: true,
+      message: "Report устгагдлаа.",
+    });
+  } catch (err) {
+    console.error("Delete report error:", err);
+
+    res.status(500).json({
+      ok: false,
+      message: "Report устгах үед алдаа гарлаа.",
+    });
+  }
+});
 
 const socketRoomMap = new Map();
 
@@ -1262,27 +1456,8 @@ function getRoomById(roomId) {
   return rooms.find((room) => room.id === roomId);
 }
 
-function emitRoomsData() {
-  io.emit(
-    "rooms_data",
-    rooms.map((room) => ({
-      ...room,
-      users: room.users || [],
-      count: room.users ? room.users.length : 0,
-    }))
-  );
-}
-
-function removeUserFromRoom(username, roomId) {
-  const room = getRoomById(roomId);
-
-  if (!room || !username) return;
-
-  room.users = (room.users || []).filter((user) => user !== username);
-  room.count = room.users.length;
-}
-
 function removeUserFromAllRooms(username) {
+  if (!username) return;
   if (!username) return;
 
   rooms.forEach((room) => {
@@ -1300,6 +1475,15 @@ io.on("connection", (socket) => {
     const cleanUsername = String(username || "").trim();
 
     if (!cleanUsername) return;
+
+    // Хүчээр гаргасан хэрэглэгчийг оруулахгүй
+    if (isUserBanned(cleanUsername)) {
+      socket.emit("force_logout", {
+        reason: "Та админ тарафаас системээс гаргагдсан байна.",
+      });
+      setTimeout(() => socket.disconnect(true), 500);
+      return;
+    }
 
     socket.username = cleanUsername;
 
@@ -1391,7 +1575,7 @@ io.on("connection", (socket) => {
         roomId,
         from: "system",
         type: "system",
-        text: `${username} room-оос гарлаа.`,
+        text: `${username} group-оос гарлаа.`,
       });
 
       roomMessages[roomId] = [...(roomMessages[roomId] || []), systemMsg].slice(
@@ -1672,7 +1856,7 @@ socket.on("room_message", ({ roomId, text }) => {
           roomId: room.id,
           from: "system",
           type: "system",
-          text: `${username} room-оос гарлаа.`,
+          text: `${username} group-оос гарлаа.`,
         });
 
         roomMessages[room.id] = [

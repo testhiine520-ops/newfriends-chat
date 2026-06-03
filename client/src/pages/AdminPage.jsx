@@ -28,9 +28,7 @@ export default function AdminPage() {
      ADMIN LOGIN STATE
   ========================= */
 
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(
-    localStorage.getItem("newfriends_admin") === "true"
-  );
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   const [authMode, setAuthMode] = useState("login"); // "login" | "register"
   const [adminUsername, setAdminUsername] = useState("");
@@ -46,6 +44,13 @@ export default function AdminPage() {
   const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  /* =========================
+     BANNED USERS STATE
+  ========================= */
+
+  const [bannedUsers, setBannedUsers] = useState([]);
+  const [actionMsg, setActionMsg] = useState("");
 
   /* =========================
      ADMIN LOGIN
@@ -76,8 +81,6 @@ export default function AdminPage() {
       const data = await response.json();
 
       if (response.ok && data.ok) {
-        localStorage.setItem("newfriends_admin", "true");
-        localStorage.setItem("newfriends_admin_name", data.username || username);
         setIsAdminLoggedIn(true);
         setAdminError("");
         return;
@@ -166,9 +169,89 @@ export default function AdminPage() {
     }
   };
 
+  /* =========================
+     LOAD / BAN / UNBAN USERS
+  ========================= */
+
+  const loadBanned = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/admin/banned`);
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        setBannedUsers(data.banned || []);
+      }
+    } catch (error) {
+      console.error("Load banned error:", error);
+    }
+  };
+
+  const handleBanUser = async (username, reason, reportId) => {
+    if (!username) return;
+
+    setActionMsg("");
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/admin/ban`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, reason }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        setBannedUsers(data.banned || []);
+        setActionMsg(data.message || `${username} гаргагдлаа.`);
+
+        // Хүчээр гаргасан бол report-ийг шийдвэрлэсэн болгоно
+        if (reportId) {
+          await handleResolveReport(reportId);
+        }
+      } else {
+        setActionMsg(data.message || "Гаргах үед алдаа гарлаа.");
+      }
+    } catch (error) {
+      console.error("Ban error:", error);
+      setActionMsg("Сервертэй холбогдоход алдаа гарлаа.");
+    }
+  };
+
+  const handleUnbanUser = async (username) => {
+    if (!username) return;
+
+    setActionMsg("");
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/admin/unban`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        setBannedUsers(data.banned || []);
+        setActionMsg(data.message || `${username} сэргээгдлээ.`);
+      } else {
+        setActionMsg(data.message || "Сэргээх үед алдаа гарлаа.");
+      }
+    } catch (error) {
+      console.error("Unban error:", error);
+      setActionMsg("Сервертэй холбогдоход алдаа гарлаа.");
+    }
+  };
+
+  const isBanned = (username) =>
+    bannedUsers.some(
+      (b) => String(b.username).toLowerCase() === String(username).toLowerCase()
+    );
+
   useEffect(() => {
     if (isAdminLoggedIn) {
       loadReports();
+      loadBanned();
     }
   }, [isAdminLoggedIn]);
 
@@ -202,6 +285,33 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error("Resolve report error:", error);
+    }
+  };
+
+  const handleDeleteReport = async (reportId) => {
+    if (!reportId) return;
+
+    if (!window.confirm("Энэ report-ийг устгах уу?")) return;
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/reports/${reportId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        await loadReports();
+
+        setSelectedReport((prev) =>
+          prev && prev._id === reportId ? null : prev
+        );
+      } else {
+        setActionMsg(data.message || "Report устгах үед алдаа гарлаа.");
+      }
+    } catch (error) {
+      console.error("Delete report error:", error);
+      setActionMsg("Сервертэй холбогдоход алдаа гарлаа.");
     }
   };
 
@@ -297,32 +407,66 @@ export default function AdminPage() {
         <h2>Admin</h2>
         <p>Report Center</p>
 
-        <button type="button" onClick={loadReports}>
-          Refresh
-        </button>
+        <div className="admin-banned-section">
+          <h3 className="admin-banned-title">
+            Гаргасан хэрэглэгчид ({bannedUsers.length})
+          </h3>
 
-        <button type="button" onClick={() => navigate("/")}>
-          Нэвтрэх хуудас
-        </button>
+          {bannedUsers.length === 0 ? (
+            <p className="admin-banned-empty">Одоогоор хэн ч гаргагдаагүй.</p>
+          ) : (
+            <div className="admin-banned-list">
+              {bannedUsers.map((b) => (
+                <div className="admin-banned-item" key={b.username}>
+                  <div className="admin-banned-info">
+                    <strong>{b.username}</strong>
+                    {b.reason && <small>{b.reason}</small>}
+                  </div>
 
-        <button type="button" onClick={() => navigate("/chat")}>
-          Chat руу очих
-        </button>
-
-        <button
-          type="button"
-          className="admin-logout-btn"
-          onClick={handleAdminLogout}
-        >
-          Admin гарах
-        </button>
+                  <button
+                    type="button"
+                    className="admin-unban-btn"
+                    onClick={() => handleUnbanUser(b.username)}
+                  >
+                    Эрх сэргээх
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </aside>
 
       <main className="admin-main">
         <div className="admin-header">
-          <h1>Ирсэн report-ууд</h1>
-          <p>Нийт report: {reports.length}</p>
+          <div className="admin-header-titles">
+            <h1>Ирсэн report-ууд</h1>
+            <p>Нийт report: {reports.length}</p>
+          </div>
+
+          <div className="admin-header-actions">
+            <button
+              type="button"
+              className="admin-header-btn"
+              onClick={() => {
+                loadReports();
+                loadBanned();
+              }}
+            >
+              Refresh
+            </button>
+
+            <button
+              type="button"
+              className="admin-header-btn admin-header-logout"
+              onClick={handleAdminLogout}
+            >
+              Гарах
+            </button>
+          </div>
         </div>
+
+        {actionMsg && <div className="admin-action-msg">{actionMsg}</div>}
 
         <div className="admin-content">
           <section className="report-list-panel">
@@ -332,9 +476,8 @@ export default function AdminPage() {
               <div className="admin-empty">Одоогоор report алга.</div>
             ) : (
               reports.map((report) => (
-                <button
+                <div
                   key={report._id}
-                  type="button"
                   className={`report-list-item ${
                     selectedReport?._id === report._id ? "active" : ""
                   }`}
@@ -343,9 +486,22 @@ export default function AdminPage() {
                   <div className="report-list-top">
                     <strong>{report.target}</strong>
 
-                    <span className={`report-status ${report.status}`}>
-                      {report.status || "pending"}
-                    </span>
+                    <div className="report-list-badges">
+                      <span className={`report-status ${report.status}`}>
+                        {report.status || "pending"}
+                      </span>
+
+                      <button
+                        type="button"
+                        className="report-delete-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDeleteReport(report._id);
+                        }}
+                      >
+                        Устгах
+                      </button>
+                    </div>
                   </div>
 
                   <p>
@@ -357,7 +513,7 @@ export default function AdminPage() {
                       ? new Date(report.createdAt).toLocaleString()
                       : ""}
                   </small>
-                </button>
+                </div>
               ))
             )}
           </section>
@@ -383,17 +539,52 @@ export default function AdminPage() {
                       {selectedReport.chatType}
                     </p>
 
+                    {selectedReport.chatType === "group" &&
+                      selectedReport.roomName && (
+                        <p>
+                          <strong>Group:</strong> {selectedReport.roomName}
+                        </p>
+                      )}
+
                     <p>
                       <strong>Огноо:</strong>{" "}
                       {selectedReport.createdAt
                         ? new Date(selectedReport.createdAt).toLocaleString()
                         : ""}
                     </p>
+
+                    {selectedReport.reason && (
+                      <p className="report-detail-reason">
+                        <strong>Шалтгаан:</strong> {selectedReport.reason}
+                      </p>
+                    )}
                   </div>
 
-                  <span className={`report-status ${selectedReport.status}`}>
-                    {selectedReport.status || "pending"}
-                  </span>
+                  <div className="report-detail-actions">
+                    {isBanned(selectedReport.target) ? (
+                      <button
+                        type="button"
+                        className="report-unban-btn"
+                        onClick={() => handleUnbanUser(selectedReport.target)}
+                      >
+                        Эрх сэргээх
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="report-ban-btn"
+                        onClick={() =>
+                          handleBanUser(
+                            selectedReport.target,
+                            `Report (${selectedReport.reporter})-ын улмаас гаргагдсан.`,
+                            selectedReport._id
+                          )
+                        }
+                      >
+                        Хүчээр гаргах
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="report-message-box">

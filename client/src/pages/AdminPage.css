@@ -432,3 +432,201 @@
     min-height: auto;
   }
 }
+
+/* =========================
+   ADMIN HEADER ACTIONS (refresh / гарах)
+========================= */
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-header-titles {
+  flex: 1;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.admin-header-btn {
+  padding: 12px 22px;
+  border-radius: 13px;
+  border: 1px solid #2e5f94;
+  background: #12375c;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.admin-header-btn:hover {
+  background: #2563eb;
+}
+
+.admin-header-logout {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.admin-header-logout:hover {
+  background: #dc2626;
+}
+
+.admin-action-msg {
+  background: rgba(34, 197, 94, 0.16);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #bbf7d0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* =========================
+   BANNED USERS (sidebar)
+========================= */
+.admin-banned-section {
+  margin-top: 24px;
+  border-top: 1px solid #1d3b5f;
+  padding-top: 18px;
+}
+
+.admin-banned-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #fca5a5;
+  font-weight: 900;
+}
+
+.admin-banned-empty {
+  color: #7b94ad !important;
+  font-size: 14px;
+  margin: 0 !important;
+}
+
+.admin-banned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-banned-item {
+  background: #12253a;
+  border: 1px solid #34506f;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.admin-banned-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.admin-banned-info strong {
+  font-size: 15px;
+}
+
+.admin-banned-info small {
+  color: #9fb3c8;
+  font-size: 12px;
+}
+
+.admin-sidebar .admin-unban-btn {
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #16a34a;
+  border: 1px solid #16a34a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-sidebar .admin-unban-btn:hover {
+  background: #15803d;
+}
+
+/* =========================
+   REPORT DETAIL BAN BUTTON (шар дугуй)
+========================= */
+.report-detail-actions {
+  flex-shrink: 0;
+}
+
+.report-ban-btn {
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: none;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.report-ban-btn:hover {
+  background: #dc2626;
+}
+
+.report-unban-btn {
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: none;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.report-unban-btn:hover {
+  background: #15803d;
+}
+
+.report-detail-reason {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 10px;
+  color: #fecaca;
+}
+
+.report-detail-reason strong {
+  color: #fca5a5;
+}
+
+/* Report устгах товч (resolved badge хажууд) */
+.report-list-badges {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-delete-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.report-delete-btn:hover {
+  background: #b91c1c;
+}

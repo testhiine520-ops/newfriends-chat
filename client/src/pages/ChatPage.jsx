@@ -234,6 +234,16 @@ export default function ChatPage() {
   const [mobileTab, setMobileTab] = useState("chat");
 
   /* =========================
+     REPORT MODAL STATE
+  ========================= */
+
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportTarget, setReportTarget] = useState("");
+  const [reportSending, setReportSending] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+
+  /* =========================
      MEDIA STATE
   ========================= */
 
@@ -256,6 +266,11 @@ export default function ChatPage() {
     }
 
     setMyName(username);
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
     socket.emit("join", username);
     loadRecentChats(username);
   }, [navigate]);
@@ -324,6 +339,13 @@ const loadPrivateHistory = async (partner) => {
     const handleRoomsData = (data) => {
       if (Array.isArray(data)) {
         setRooms(data);
+
+        // Сонгосон room-ийн гишүүдийг шинэчилнэ (шинэ хүн орох/гарах)
+        setSelectedRoom((prev) => {
+          if (!prev) return prev;
+          const updated = data.find((room) => room.id === prev.id);
+          return updated ? { ...prev, ...updated } : prev;
+        });
       }
     };
 
@@ -449,6 +471,26 @@ const loadPrivateHistory = async (partner) => {
     socket.on("private_image", appendPrivateMessage);
     socket.on("private_voice", appendPrivateMessage);
 
+    const handleForceLogout = (payload) => {
+      const reason =
+        payload?.reason || "Та админ тарафаас системээс гаргагдлаа.";
+
+      localStorage.removeItem("newfriends_user");
+      localStorage.removeItem("chatUser");
+      localStorage.removeItem("user");
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("username");
+
+      if (socket.connected) {
+        socket.disconnect();
+      }
+
+      alert(reason);
+      navigate("/");
+    };
+
+    socket.on("force_logout", handleForceLogout);
+
     return () => {
       socket.off("users_list", handleUsersList);
       socket.off("rooms_data", handleRoomsData);
@@ -469,6 +511,8 @@ const loadPrivateHistory = async (partner) => {
       socket.off("private_message", appendPrivateMessage);
       socket.off("private_image", appendPrivateMessage);
       socket.off("private_voice", appendPrivateMessage);
+
+      socket.off("force_logout", handleForceLogout);
     };
   }, [myName, selectedRoom]);
 
@@ -674,12 +718,53 @@ const handleToggleSaveChat = async () => {
    Одоогийн chat-ийн сүүлийн message-үүдийг admin руу илгээнэ
 ========================= */
 
+const openReportModal = () => {
+  if (chatMode === "private") {
+    if (!selectedUser) {
+      alert("Эхлээд хэн нэгэнтэй чат сонгоно уу.");
+      return;
+    }
+    setReportTarget(selectedUser);
+  } else {
+    if (!selectedRoom) {
+      alert("Эхлээд group сонгоно уу.");
+      return;
+    }
+    // Group-д өөрөөс бусад хүмүүс
+    const others = (selectedRoom.users || []).filter(
+      (u) => u !== myName
+    );
+    setReportTarget(others[0] || "");
+  }
+
+  setReportReason("");
+  setShowReportModal(true);
+};
+
+const closeReportModal = () => {
+  setShowReportModal(false);
+  setReportReason("");
+  setReportTarget("");
+};
+
 const handleReportChat = async () => {
+  const cleanReason = reportReason.trim();
+
+  if (!cleanReason) {
+    alert("Report хийх шалтгаанаа бичнэ үү.");
+    return;
+  }
+
+  if (chatMode === "room" && !reportTarget) {
+    alert("Group дотроос хэнийг report хийхээ сонгоно уу.");
+    return;
+  }
+
+  setReportSending(true);
+
   try {
     const target =
-      chatMode === "private"
-        ? selectedUser
-        : selectedRoom?.name || "Group сонгоогүй";
+      chatMode === "private" ? selectedUser : reportTarget;
 
     const messagesToReport =
       chatMode === "private"
@@ -699,6 +784,8 @@ const handleReportChat = async () => {
         reporter: myName,
         chatType: chatMode === "private" ? "private" : "group",
         target,
+        reason: cleanReason,
+        roomName: chatMode === "room" ? selectedRoom?.name || "" : "",
         messages: messagesToReport,
       }),
     });
@@ -707,6 +794,7 @@ const handleReportChat = async () => {
 
     if (response.ok && data.ok) {
       setStatusText("Report admin руу амжилттай илгээгдлээ.");
+      closeReportModal();
       alert("Report admin руу амжилттай илгээгдлээ.");
     } else {
       alert(data.message || "Report илгээх үед алдаа гарлаа.");
@@ -714,6 +802,8 @@ const handleReportChat = async () => {
   } catch (err) {
     console.error("Report error:", err);
     alert("Report илгээх үед алдаа гарлаа.");
+  } finally {
+    setReportSending(false);
   }
 };
 
@@ -897,6 +987,10 @@ const handleInputKeyDown = (event) => {
     localStorage.removeItem("user");
     localStorage.removeItem("currentUser");
     localStorage.removeItem("username");
+
+    if (socket.connected) {
+      socket.disconnect();
+    }
 
     navigate("/");
   };
@@ -1172,6 +1266,43 @@ const renderChatHeader = () => {
 
       <div className="chat-action-row">
         {chatMode === "room" && selectedRoom && (
+          <div className="members-dropdown">
+            <button
+              type="button"
+              className="members-toggle-btn"
+              onClick={() => setShowMembers((prev) => !prev)}
+            >
+              Гишүүд (
+              {(selectedRoom.users || []).filter((u) => u !== myName).length +
+                1}
+              )
+              <span className={`members-arrow ${showMembers ? "open" : ""}`}>
+                ›
+              </span>
+            </button>
+
+            {showMembers && (
+              <div className="members-dropdown-menu">
+                {(selectedRoom.users || []).filter((u) => u !== myName)
+                  .length > 0 ? (
+                  selectedRoom.users
+                    .filter((user) => user !== myName)
+                    .map((user) => (
+                      <span key={user} className="members-dropdown-item">
+                        {user}
+                      </span>
+                    ))
+                ) : (
+                  <span className="members-dropdown-empty">
+                    Өөр хүн алга
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {chatMode === "room" && selectedRoom && (
           <button
             type="button"
             className="leave-room-btn"
@@ -1199,21 +1330,11 @@ const renderChatHeader = () => {
         <button
           type="button"
           className="report-btn"
-          onClick={handleReportChat}
+          onClick={openReportModal}
         >
           Report
         </button>
       </div>
-
-      {chatMode === "room" && selectedRoom?.users?.length > 0 && (
-        <div className="room-members">
-          {selectedRoom.users.map((user) => (
-            <span key={user} className="member-pill">
-              {user}
-            </span>
-          ))}
-        </div>
-      )}
 
       {chatMode === "private" && selectedUser && (
         <div className="room-members">
@@ -1536,6 +1657,81 @@ const renderChatHeader = () => {
 
       {renderMobilePanel()}
       {renderMobileBottomNav()}
+
+      {showReportModal && (
+        <div className="report-modal-overlay" onClick={closeReportModal}>
+          <div
+            className="report-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="report-modal-title">Report илгээх</h2>
+
+            <p className="report-modal-sub">
+              {chatMode === "private"
+                ? `${selectedUser}-г report хийх гэж байна.`
+                : `"${selectedRoom?.name || ""}" group дотроос хэрэглэгч report хийх.`}
+            </p>
+
+            {chatMode === "room" && (
+              <div className="report-modal-field">
+                <label>Хэнийг report хийх вэ?</label>
+
+                {(selectedRoom?.users || []).filter((u) => u !== myName)
+                  .length > 0 ? (
+                  <select
+                    value={reportTarget}
+                    onChange={(event) => setReportTarget(event.target.value)}
+                  >
+                    {(selectedRoom?.users || [])
+                      .filter((u) => u !== myName)
+                      .map((user) => (
+                        <option key={user} value={user}>
+                          {user}
+                        </option>
+                      ))}
+                  </select>
+                ) : (
+                  <p className="report-modal-empty">
+                    Group дотор өөр хэрэглэгч алга байна.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="report-modal-field">
+              <label>Report хийх шалтгаан</label>
+              <textarea
+                value={reportReason}
+                onChange={(event) => setReportReason(event.target.value)}
+                placeholder="Шалтгаанаа дэлгэрэнгүй бичнэ үү..."
+                rows={4}
+              />
+            </div>
+
+            <div className="report-modal-actions">
+              <button
+                type="button"
+                className="report-modal-cancel"
+                onClick={closeReportModal}
+              >
+                Болих
+              </button>
+
+              <button
+                type="button"
+                className="report-modal-submit"
+                onClick={handleReportChat}
+                disabled={
+                  reportSending ||
+                  (chatMode === "room" && !reportTarget)
+                }
+              >
+                {reportSending ? "Илгээж байна..." : "Report илгээх"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2815,3 +2815,236 @@ body,
 .folder-header .folder-arrow {
   margin-top: 2px !important;
 }
+
+
+/* =========================
+   HEADER BUTTONS SAME COLOR
+   Room-оос гарах ба Report ижил өнгөтэй
+========================= */
+.leave-room-btn,
+.report-btn {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  padding: 14px 24px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.35) !important;
+}
+
+.leave-room-btn:hover,
+.report-btn:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px) !important;
+}
+
+
+/* =========================
+   REPORT MODAL
+========================= */
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 22, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.report-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #122c4d;
+  border: 1px solid rgba(120, 160, 210, 0.25);
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.report-modal-title {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.report-modal-sub {
+  margin: 0 0 18px;
+  font-size: 15px;
+  color: #a9c4e6;
+}
+
+.report-modal-field {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-modal-field label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #cfe0f5;
+}
+
+.report-modal-field select,
+.report-modal-field textarea {
+  width: 100%;
+  background: #0d2138;
+  border: 1px solid rgba(120, 160, 210, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.report-modal-field select:focus,
+.report-modal-field textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.report-modal-empty {
+  margin: 0;
+  font-size: 14px;
+  color: #f0a0a0;
+}
+
+.report-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.report-modal-cancel,
+.report-modal-submit {
+  flex: 1;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.report-modal-cancel {
+  background: rgba(120, 140, 170, 0.25);
+  color: #dce8f7;
+}
+
+.report-modal-cancel:hover {
+  background: rgba(120, 140, 170, 0.4);
+}
+
+.report-modal-submit {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.report-modal-submit:hover {
+  background: #b91c1c;
+}
+
+.report-modal-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+/* =========================
+   ALL RED BUTTONS SAME COLOR
+   Room-оос гарах, Report, Гарах (logout) бүгд ижил
+========================= */
+.leave-room-btn,
+.report-btn,
+.logout-btn {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.leave-room-btn:hover,
+.report-btn:hover,
+.logout-btn:hover {
+  background: #b91c1c !important;
+  color: #ffffff !important;
+}
+
+
+/* =========================
+   MEMBERS DROPDOWN
+   Room-оос гарах товчны хажууд гишүүдийн жагсаалт
+========================= */
+.members-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.members-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1d3a5f;
+  color: #ffffff;
+  border: 1px solid rgba(120, 160, 210, 0.3);
+  border-radius: 16px;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.members-toggle-btn:hover {
+  background: #244b78;
+}
+
+.members-arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 18px;
+}
+
+.members-arrow.open {
+  transform: rotate(90deg);
+}
+
+.members-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #122c4d;
+  border: 1px solid rgba(120, 160, 210, 0.3);
+  border-radius: 14px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  z-index: 50;
+}
+
+.members-dropdown-item {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #0d2138;
+  color: #dce8f7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.members-dropdown-empty {
+  padding: 10px 14px;
+  color: #8fa9c8;
+  font-size: 14px;
+}
