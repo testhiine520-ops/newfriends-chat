@@ -221,7 +221,7 @@ export default function ChatPage() {
   const [privateMessages, setPrivateMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
   const [statusText, setStatusText] = useState(
-    "Эхлээд group chat сонгоно уу."
+    "Эхлээд Групп чат сонгоно уу."
   );
 
   /* =========================
@@ -247,7 +247,7 @@ export default function ChatPage() {
      THEME (light default, toggle to dark)
   ========================= */
 
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
 
   /* =========================
      MEDIA STATE
@@ -367,7 +367,7 @@ const loadPrivateHistory = async (partner) => {
       setSelectedRoom(room);
       setSelectedUser(null);
       setChatMode("room");
-      setStatusText(`"${room.name}" group үүслээ.`);
+      setStatusText(`"${room.name}" Групп үүслээ.`);
 
       socket.emit("join_room", { roomId: room.id });
     };
@@ -383,7 +383,7 @@ const loadPrivateHistory = async (partner) => {
 
       if (selectedRoom?.id === roomId) {
         setSelectedRoom(null);
-        setStatusText(text || "Group устлаа.");
+        setStatusText(text || "Групп устлаа.");
       }
     };
 
@@ -418,7 +418,7 @@ const loadPrivateHistory = async (partner) => {
       if (!from) return;
 
       setReceivedRequest({ from });
-      setStatusText(`${from} private chat хийх хүсэлт илгээлээ.`);
+      setStatusText(`${from} хувийн чат хийх хүсэлт илгээлээ.`);
     };
 
     const handleChatRequestResponse = ({ from, accepted }) => {
@@ -429,10 +429,10 @@ const loadPrivateHistory = async (partner) => {
         setSelectedRoom(null);
         setChatMode("private");
         setPrivateActiveUser(from);
-        setStatusText(`${from}-тэй chat эхэллээ.`);
+        setStatusText(`${from}-тэй чат эхэллээ.`);
       } else {
         setPrivateActiveUser(null);
-        setStatusText(`${from} request-ийг зөвшөөрсөнгүй.`);
+        setStatusText(`${from} хүсэлтийг зөвшөөрсөнгүй.`);
       }
     };
 
@@ -447,7 +447,7 @@ const loadPrivateHistory = async (partner) => {
       setSelectedRoom(null);
       setChatMode("private");
       setPrivateActiveUser(partner);
-      setStatusText(`${partner}-тэй chat эхэллээ.`);
+      setStatusText(`${partner}-тэй чат эхэллээ.`);
 
       loadRecentChats(myName);
     };
@@ -583,7 +583,7 @@ const loadPrivateHistory = async (partner) => {
     setPrivateActiveUser(null);
     setChatMode("room");
     setMobileTab("chat");
-    setStatusText(`Та "${room.name}" group room-д орлоо.`);
+    setStatusText(`Та "${room.name}" Группд орлоо.`);
 
     socket.emit("join_room", {
       roomId: room.id,
@@ -598,7 +598,7 @@ const loadPrivateHistory = async (partner) => {
     });
 
     setSelectedRoom(null);
-    setStatusText("Эхлээд group chat сонгоно уу.");
+    setStatusText("Эхлээд Групп чат сонгоно уу.");
   };
 
   const handleCreateRoom = () => {
@@ -633,7 +633,7 @@ const loadPrivateHistory = async (partner) => {
       return;
     }
 
-    setStatusText(`${username} рүү private chat request явууллаа.`);
+    setStatusText(`${username} рүү хувийн чат хүсэлт явууллаа.`);
 
     socket.emit("send_chat_request", {
       from: myName,
@@ -654,7 +654,7 @@ const loadPrivateHistory = async (partner) => {
     setSelectedRoom(null);
     setChatMode("private");
     setPrivateActiveUser(receivedRequest.from);
-    setStatusText(`${receivedRequest.from}-тэй chat эхэллээ.`);
+    setStatusText(`${receivedRequest.from}-тэй чат эхэллээ.`);
     setReceivedRequest(null);
     setMobileTab("chat");
   };
@@ -668,13 +668,13 @@ const loadPrivateHistory = async (partner) => {
       accepted: false,
     });
 
-    setStatusText(`${receivedRequest.from}-ийн request татгалзлаа.`);
+    setStatusText(`${receivedRequest.from}-ийн хүсэлт татгалзлаа.`);
     setReceivedRequest(null);
   };
 
   /* =========================
    SAVE PRIVATE CHAT ACTION
-   ❤️ дарвал тухайн хүнтэй хийсэн chat history-г хадгална
+   ❤️ дарвал тухайн хүнтэй хийсэн чат түүхийг хадгална
 ========================= */
 
 const handleToggleSaveChat = async () => {
@@ -710,12 +710,12 @@ const handleToggleSaveChat = async () => {
       setStatusText(
         isSaved
           ? `${selectedUser} хадгалсан чатаас хасагдлаа.`
-          : `${selectedUser}-тэй хийсэн chat history хадгалагдлаа.`
+          : `${selectedUser}-тэй хийсэн чат түүх хадгалагдлаа.`
       );
     }
   } catch (err) {
     console.error("Save chat error:", err);
-    setStatusText("Chat хадгалах үед алдаа гарлаа.");
+    setStatusText("Чат хадгалах үед алдаа гарлаа.");
   }
 };
 
@@ -733,7 +733,7 @@ const openReportModal = () => {
     setReportTarget(selectedUser);
   } else {
     if (!selectedRoom) {
-      alert("Эхлээд group сонгоно уу.");
+      alert("Эхлээд Групп сонгоно уу.");
       return;
     }
     // Group-д өөрөөс бусад хүмүүс
@@ -762,7 +762,7 @@ const handleReportChat = async () => {
   }
 
   if (chatMode === "room" && !reportTarget) {
-    alert("Group дотроос хэнийг report хийхээ сонгоно уу.");
+    alert("Групп дотроос хэнийг мэдээлэхээ сонгоно уу.");
     return;
   }
 
@@ -824,7 +824,7 @@ const handleSendMessage = () => {
 
   if (chatMode === "room") {
     if (!selectedRoom?.id) {
-      setStatusText("Эхлээд group chat сонгоно уу.");
+      setStatusText("Эхлээд Групп чат сонгоно уу.");
       return;
     }
 
@@ -846,7 +846,7 @@ const handleSendMessage = () => {
 
     if (!canSendPrivate) {
       setStatusText(
-        "Private chat эхлүүлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
+        "Хувийн чат эхлүүлэхийн тулд хүсэлт зөвшөөрөгдөх хэрэгтэй."
       );
       return;
     }
@@ -1071,7 +1071,7 @@ const handleInputKeyDown = (event) => {
       <div className="room-desc">{room.description}</div>
 
       {selectedRoom?.id === room.id && (
-        <div className="joined-badge">Та энэ room-д байна</div>
+        <div className="joined-badge">Та энэ Группд байна</div>
       )}
     </button>
   );
@@ -1151,7 +1151,7 @@ const handleInputKeyDown = (event) => {
       </div>
 
       <div className="sidebar-scroll">
-        <div className="online-title">Групп chats 💭</div>
+        <div className="online-title">Групп чатууд 💭</div>
 
         <div className="rooms-list">{rooms.map(renderRoomItem)}</div>
 
@@ -1262,8 +1262,8 @@ const handleInputKeyDown = (event) => {
 ========================= */
 
 const renderChatHeader = () => {
-  let title = "Group chat сонгоно уу";
-  let subtitle = "Зүүн талын group дээр дарж group chat эхлүүлнэ.";
+  let title = "Групп чат сонгоно уу";
+  let subtitle = "Зүүн талын Групп дээр дарж Групп чат эхлүүлнэ.";
 
   if (chatMode === "room" && selectedRoom) {
     title = selectedRoom.name;
@@ -1272,7 +1272,7 @@ const renderChatHeader = () => {
 
   if (chatMode === "private" && selectedUser) {
     title = selectedUser;
-    subtitle = `${selectedUser}-тэй private Чат хийж байна.`;
+    subtitle = `${selectedUser}-тэй хувийн чат хийж байна.`;
   }
 
   return (
@@ -1379,7 +1379,7 @@ const renderChatHeader = () => {
     return (
       <div className="request-box">
         <p>
-          <strong>{receivedRequest.from}</strong> private chat хийх хүсэлт
+          <strong>{receivedRequest.from}</strong> хувийн чат хийх хүсэлт
           илгээсэн байна.
         </p>
 
@@ -1407,10 +1407,10 @@ const renderChatHeader = () => {
       ) : (
         <p className="empty-text">
   {chatMode === "private"
-    ? "Одоогоор private мессеж алга."
+    ? "Одоогоор хувийн мессеж алга."
     : selectedRoom
-    ? "Энэ group-д одоогоор мессеж алга. Эхний мессежээ бичээрэй."
-    : "Эхлээд group chat сонгоно уу."}
+    ? "Энэ Группд одоогоор мессеж алга. Эхний мессежээ бичээрэй."
+    : "Эхлээд Групп чат сонгоно уу."}
 </p>
       )}
 
@@ -1433,8 +1433,8 @@ const renderChatHeader = () => {
           canSendMessage
             ? "Энд мессежээ бичнэ..."
             : chatMode === "private"
-            ? "Private chat эхлүүлэхийн тулд request зөвшөөрөгдөх хэрэгтэй."
-            : "Мессеж бичихийн тулд group room-д орно уу."
+            ? "Хувийн чат эхлүүлэхийн тулд хүсэлт зөвшөөрөгдөх хэрэгтэй."
+            : "Мессеж бичихийн тулд Группд орно уу."
         }
       />
 
@@ -1532,7 +1532,7 @@ const renderChatHeader = () => {
                   >
                     <div>
                       <strong>{username}</strong>
-                      <p>Хадгалсан private chat</p>
+                      <p>Хадгалсан хувийн чат</p>
                     </div>
 
                     <em>{onlineUsers.includes(username) ? "online" : "offline"}</em>
@@ -1566,7 +1566,7 @@ const renderChatHeader = () => {
                   >
                     <div>
                       <strong>{username}</strong>
-                      <p>Private chat request явуулах</p>
+                      <p>Хувийн чат хүсэлт явуулах</p>
                     </div>
 
                     <em>online</em>
@@ -1688,7 +1688,7 @@ const renderChatHeader = () => {
             <p className="report-modal-sub">
               {chatMode === "private"
                 ? `${selectedUser}-г report хийх гэж байна.`
-                : `"${selectedRoom?.name || ""}" group дотроос хэрэглэгч report хийх.`}
+                : `"${selectedRoom?.name || ""}" Групп дотроос хэрэглэгч мэдээлэх.`}
             </p>
 
             {chatMode === "room" && (
@@ -1711,7 +1711,7 @@ const renderChatHeader = () => {
                   </select>
                 ) : (
                   <p className="report-modal-empty">
-                    Group дотор өөр хэрэглэгч алга байна.
+                    Групп дотор өөр хэрэглэгч алга байна.
                   </p>
                 )}
               </div>

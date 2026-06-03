@@ -772,3 +772,102 @@
   color: #047857 !important;
   border: 1px solid #a7f3d0 !important;
 }
+
+/* =========================================================
+   ADMIN DARK MODE — Modern template (хар + violet)
+   admin-page болон admin-login-page дээр admin-light БАЙХГҮЙ үед
+========================================================= */
+.admin-page:not(.admin-light) {
+  background: #0a0a0d !important;
+  color: #e4e4e7 !important;
+}
+.admin-page:not(.admin-light) .admin-sidebar {
+  background: #131318 !important;
+  border-right: 1px solid #26262e !important;
+}
+.admin-page:not(.admin-light) .admin-sidebar h2 { color: #ffffff !important; }
+.admin-page:not(.admin-light) .admin-sidebar p { color: #a78bfa !important; }
+.admin-page:not(.admin-light) .admin-banned-title { color: #ffffff !important; }
+.admin-page:not(.admin-light) .admin-banned-empty { color: #71717a !important; }
+.admin-page:not(.admin-light) .admin-banned-item {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+}
+.admin-page:not(.admin-light) .admin-banned-info,
+.admin-page:not(.admin-light) .admin-banned-info strong { color: #e4e4e7 !important; }
+.admin-page:not(.admin-light) .admin-main { background: #0a0a0d !important; }
+.admin-page:not(.admin-light) .admin-header h1 { color: #ffffff !important; }
+.admin-page:not(.admin-light) .admin-header p { color: #a1a1aa !important; }
+.admin-page:not(.admin-light) .admin-header-btn {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+.admin-page:not(.admin-light) .admin-header-theme { background: #211c3a !important; color: #b9a8ff !important; }
+.admin-page:not(.admin-light) .admin-header-logout {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+.admin-page:not(.admin-light) .report-list-panel,
+.admin-page:not(.admin-light) .report-detail-panel {
+  background: #131318 !important;
+  border: 1px solid #26262e !important;
+}
+.admin-page:not(.admin-light) .report-list-item {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+  color: #e4e4e7 !important;
+}
+.admin-page:not(.admin-light) .report-list-item.active,
+.admin-page:not(.admin-light) .report-list-item:hover {
+  background: #251f3d !important;
+  border-color: #7c5cff !important;
+}
+.admin-page:not(.admin-light) .report-list-item strong { color: #f4f4f5 !important; }
+.admin-page:not(.admin-light) .report-list-item p,
+.admin-page:not(.admin-light) .report-list-item small { color: #8a8a94 !important; }
+.admin-page:not(.admin-light) .report-detail-card {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+}
+.admin-page:not(.admin-light) .report-detail-card,
+.admin-page:not(.admin-light) .report-detail-card strong,
+.admin-page:not(.admin-light) .report-detail-top { color: #e4e4e7 !important; }
+.admin-page:not(.admin-light) .report-detail-card h2 { color: #ffffff !important; }
+.admin-page:not(.admin-light) .report-message-box {
+  background: #131318 !important;
+  border: 1px solid #28282f !important;
+}
+.admin-page:not(.admin-light) .admin-message-item {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+  color: #e4e4e7 !important;
+}
+.admin-page:not(.admin-light) .admin-empty,
+.admin-page:not(.admin-light) .admin-empty-small { color: #71717a !important; }
+
+/* Admin login dark */
+.admin-login-page:not(.admin-light) {
+  background: #0a0a0d !important;
+  color: #e4e4e7 !important;
+}
+.admin-login-page:not(.admin-light) .admin-login-card {
+  background: #18181d !important;
+  border: 1px solid #28282f !important;
+}
+.admin-login-page:not(.admin-light) .admin-login-card h1 { color: #ffffff !important; }
+.admin-login-page:not(.admin-light) .admin-login-card p { color: #a1a1aa !important; }
+.admin-login-page:not(.admin-light) .admin-auth-tab.active { background: #7c5cff !important; color: #ffffff !important; }
+.admin-login-page:not(.admin-light) .admin-login-form input {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+.admin-login-page:not(.admin-light) .admin-login-form button { background: #7c5cff !important; }
+.admin-login-page:not(.admin-light) .admin-back-btn,
+.admin-login-page:not(.admin-light) .admin-theme-toggle {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}

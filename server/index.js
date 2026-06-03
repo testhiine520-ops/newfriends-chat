@@ -341,7 +341,7 @@ function removeEmptyCustomRooms() {
 
     io.emit("room_removed", {
       roomId: room.id,
-      text: `"${room.name}" group устлаа.`,
+      text: `"${room.name}" Групп устлаа.`,
     });
   });
 }
@@ -697,7 +697,7 @@ app.post("/api/users/:username/saved-chats", async (req, res) => {
 
     res.status(500).json({
       ok: false,
-      message: "Chat хадгалах үед алдаа гарлаа.",
+      message: "Чат хадгалах үед алдаа гарлаа.",
     });
   }
 });
@@ -841,7 +841,7 @@ app.get("/api/users/:username/private-history/:partner", async (req, res) => {
 
     res.status(500).json({
       ok: false,
-      message: "Private chat history авах үед алдаа гарлаа.",
+      message: "Хувийн чат түүх авах үед алдаа гарлаа.",
     });
   }
 });
@@ -1090,7 +1090,7 @@ function forceLogoutUser(username) {
         roomId: room.id,
         from: "system",
         type: "system",
-        text: `${username} group-оос гарлаа.`,
+        text: `${username} Группээс гарлаа.`,
       });
 
       roomMessages[room.id] = [
@@ -1507,7 +1507,7 @@ io.on("connection", (socket) => {
     const room = {
       id: roomId,
       name: cleanName,
-      description: `${username} үүсгэсэн group chat`,
+      description: `${username} үүсгэсэн Групп чат`,
       custom: true,
       creator: username,
       users: [],
@@ -1550,7 +1550,7 @@ io.on("connection", (socket) => {
         roomId,
         from: "system",
         type: "system",
-        text: `${username} group-д орлоо.`,
+        text: `${username} Группд орлоо.`,
       });
 
       roomMessages[roomId] = [...messages, systemMsg].slice(-100);
@@ -1575,7 +1575,7 @@ io.on("connection", (socket) => {
         roomId,
         from: "system",
         type: "system",
-        text: `${username} group-оос гарлаа.`,
+        text: `${username} Группээс гарлаа.`,
       });
 
       roomMessages[roomId] = [...(roomMessages[roomId] || []), systemMsg].slice(
@@ -1856,7 +1856,7 @@ socket.on("room_message", ({ roomId, text }) => {
           roomId: room.id,
           from: "system",
           type: "system",
-          text: `${username} group-оос гарлаа.`,
+          text: `${username} Группээс гарлаа.`,
         });
 
         roomMessages[room.id] = [

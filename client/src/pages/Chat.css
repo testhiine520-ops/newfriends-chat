@@ -3268,3 +3268,249 @@ body,
   background: #eceef2 !important;
   color: #1e2939 !important;
 }
+
+/* =========================================================
+   DARK MODE — Modern template (зургийн загвар шиг)
+   Хар фон, violet accent, зөөлөн картууд
+   Accent: #7c5cff   BG: #0d0d10   Card: #18181d   Border: #28282f
+========================================================= */
+
+.chat-page:not(.light-mode) {
+  background: #0a0a0d !important;
+  color: #e4e4e7 !important;
+}
+
+/* Sidebar */
+.chat-page:not(.light-mode) .sidebar {
+  background: #131318 !important;
+  border: 1px solid #26262e !important;
+  color: #e4e4e7 !important;
+  box-shadow: none !important;
+}
+.chat-page:not(.light-mode) .sidebar h2,
+.chat-page:not(.light-mode) .sidebar-brand {
+  color: #ffffff !important;
+}
+.chat-page:not(.light-mode) .theme-toggle-btn {
+  background: #211c3a !important;
+  color: #b9a8ff !important;
+  border: 1px solid #3a2f5e !important;
+}
+.chat-page:not(.light-mode) .theme-toggle-btn:hover {
+  background: #2c2550 !important;
+}
+
+/* My name box */
+.chat-page:not(.light-mode) .my-name-box {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+}
+.chat-page:not(.light-mode) .my-name-box p { color: #8a8a94 !important; }
+.chat-page:not(.light-mode) .my-name-box strong { color: #f4f4f5 !important; }
+
+/* Section titles */
+.chat-page:not(.light-mode) .online-title { color: #a78bfa !important; }
+
+/* Room items */
+.chat-page:not(.light-mode) .room-item {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+  color: #e4e4e7 !important;
+}
+.chat-page:not(.light-mode) .room-item:hover { background: #232331 !important; }
+.chat-page:not(.light-mode) .room-item.active {
+  background: #251f3d !important;
+  border-color: #7c5cff !important;
+}
+.chat-page:not(.light-mode) .room-item .room-name { color: #f4f4f5 !important; }
+.chat-page:not(.light-mode) .room-item .room-desc,
+.chat-page:not(.light-mode) .room-count { color: #8a8a94 !important; }
+
+/* Create room inputs */
+.chat-page:not(.light-mode) .create-room-box input,
+.chat-page:not(.light-mode) .new-room-input {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+
+/* Folder sections */
+.chat-page:not(.light-mode) .folder-section {
+  background: #16161c !important;
+  border: 1px solid #28282f !important;
+  box-shadow: none !important;
+}
+.chat-page:not(.light-mode) .folder-header { background: #1b1b22 !important; }
+.chat-page:not(.light-mode) .folder-header:hover { background: #232331 !important; }
+.chat-page:not(.light-mode) .folder-title { color: #f4f4f5 !important; }
+.chat-page:not(.light-mode) .folder-count { color: #8a8a94 !important; }
+.chat-page:not(.light-mode) .folder-arrow {
+  background: #251f3d !important;
+  color: #a78bfa !important;
+}
+.chat-page:not(.light-mode) .folder-content {
+  background: #131318 !important;
+  border-top: 1px solid #28282f !important;
+}
+.chat-page:not(.light-mode) .folder-empty { color: #71717a !important; }
+.chat-page:not(.light-mode) .folder-user-item,
+.chat-page:not(.light-mode) .saved-chat-item,
+.chat-page:not(.light-mode) .online-user-item {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+  color: #e4e4e7 !important;
+}
+.chat-page:not(.light-mode) .folder-user-name { color: #f4f4f5 !important; }
+
+/* Main chat section */
+.chat-page:not(.light-mode) .chat-section {
+  background: #131318 !important;
+  border: 1px solid #26262e !important;
+  color: #e4e4e7 !important;
+  box-shadow: none !important;
+}
+.chat-page:not(.light-mode) .chat-header {
+  background: #131318 !important;
+  border-bottom: 1px solid #26262e !important;
+}
+.chat-page:not(.light-mode) .chat-header h1 { color: #ffffff !important; }
+.chat-page:not(.light-mode) .chat-subtitle { color: #a1a1aa !important; }
+.chat-page:not(.light-mode) .status-text { color: #8a8a94 !important; }
+
+/* Messages scroll area */
+.chat-page:not(.light-mode) .messages-box {
+  background: #0d0d11 !important;
+  border: 1px solid #26262e !important;
+  border-top: 1px solid #26262e !important;
+}
+
+/* Their message bubble */
+.chat-page:not(.light-mode) .their-message .message-bubble {
+  background: #1e1e25 !important;
+  color: #e4e4e7 !important;
+  border: 1px solid #2e2e37 !important;
+}
+.chat-page:not(.light-mode) .their-message .message-bubble .message-sender { color: #a78bfa !important; }
+.chat-page:not(.light-mode) .their-message .message-bubble .message-time { color: #71717a !important; }
+
+/* My message bubble (violet, template шиг) */
+.chat-page:not(.light-mode) .my-message .message-bubble {
+  background: #7c5cff !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+.chat-page:not(.light-mode) .my-message .message-bubble .message-time { color: #d8ccff !important; }
+
+.chat-page:not(.light-mode) .system-message { color: #71717a !important; }
+
+/* Input row */
+.chat-page:not(.light-mode) .message-input-row {
+  background: #131318 !important;
+  border-top: 1px solid #26262e !important;
+}
+.chat-page:not(.light-mode) .message-input-row input {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+.chat-page:not(.light-mode) .message-input-row input::placeholder { color: #71717a !important; }
+
+/* Send button (violet) */
+.chat-page:not(.light-mode) .send-btn {
+  background: #7c5cff !important;
+  color: #ffffff !important;
+}
+.chat-page:not(.light-mode) .send-btn:hover { background: #6d4ee6 !important; }
+
+/* Media buttons */
+.chat-page:not(.light-mode) .media-btn {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+}
+
+/* Members dropdown */
+.chat-page:not(.light-mode) .members-toggle-btn {
+  background: #1b1b22 !important;
+  color: #e4e4e7 !important;
+  border: 1px solid #34343d !important;
+}
+.chat-page:not(.light-mode) .members-toggle-btn:hover { background: #232331 !important; }
+.chat-page:not(.light-mode) .members-dropdown-menu {
+  background: #18181d !important;
+  border: 1px solid #28282f !important;
+}
+.chat-page:not(.light-mode) .members-dropdown-item {
+  background: #1b1b22 !important;
+  color: #e4e4e7 !important;
+}
+.chat-page:not(.light-mode) .members-dropdown-empty { color: #71717a !important; }
+
+/* Report modal */
+.chat-page:not(.light-mode) .report-modal {
+  background: #18181d !important;
+  border: 1px solid #28282f !important;
+}
+.chat-page:not(.light-mode) .report-modal-title { color: #ffffff !important; }
+.chat-page:not(.light-mode) .report-modal-sub { color: #a1a1aa !important; }
+.chat-page:not(.light-mode) .report-modal-field label { color: #e4e4e7 !important; }
+.chat-page:not(.light-mode) .report-modal-field select,
+.chat-page:not(.light-mode) .report-modal-field textarea {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+.chat-page:not(.light-mode) .report-modal-cancel {
+  background: #28282f !important;
+  color: #e4e4e7 !important;
+}
+
+/* =========================================================
+   DARK MODE — үлдсэн цэнхэр хэсгүүдийг саарал болгох
+   request-box, member-pill, joined-badge г.м.
+========================================================= */
+
+/* Private chat хүсэлтийн хайрцаг (зураг 3) */
+.chat-page:not(.light-mode) .request-box {
+  background: #1b1b22 !important;
+  border: 1px solid #28282f !important;
+  color: #e4e4e7 !important;
+}
+.chat-page:not(.light-mode) .request-box p,
+.chat-page:not(.light-mode) .request-box strong {
+  color: #e4e4e7 !important;
+}
+
+/* Member pill (online / request хэрэгтэй — зураг 2) */
+.chat-page:not(.light-mode) .member-pill {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #d4d4d8 !important;
+}
+
+/* Joined badge / member chips */
+.chat-page:not(.light-mode) .joined-badge {
+  background: #251f3d !important;
+  border: 1px solid #3a2f5e !important;
+  color: #b9a8ff !important;
+}
+
+/* ---- LIGHT MODE-д ч мөн адил group chat-тай нийцүүлэх ---- */
+.chat-page.light-mode .request-box {
+  background: #ffffff !important;
+  border: 1px solid #eceef2 !important;
+  color: #1e2939 !important;
+}
+.chat-page.light-mode .request-box p,
+.chat-page.light-mode .request-box strong {
+  color: #1e2939 !important;
+}
+.chat-page.light-mode .member-pill {
+  background: #f6f8fa !important;
+  border: 1px solid #dde1e7 !important;
+  color: #1e2939 !important;
+}
+.chat-page.light-mode .joined-badge {
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #047857 !important;
+}

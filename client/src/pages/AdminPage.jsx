@@ -30,7 +30,7 @@ export default function AdminPage() {
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-  const [adminTheme, setAdminTheme] = useState("light");
+  const [adminTheme, setAdminTheme] = useState("dark");
 
   const [authMode, setAuthMode] = useState("login"); // "login" | "register"
   const [adminUsername, setAdminUsername] = useState("");
@@ -527,7 +527,8 @@ export default function AdminPage() {
                   </div>
 
                   <p>
-                    {report.chatType} · {report.reporter}
+                    {report.chatType === "group" ? "Групп" : "Хувийн"} ·{" "}
+                    {report.reporter}
                   </p>
 
                   <small>
@@ -557,14 +558,16 @@ export default function AdminPage() {
                     </p>
 
                     <p>
-                      <strong>Chat төрөл:</strong>{" "}
-                      {selectedReport.chatType}
+                      <strong>Чат төрөл:</strong>{" "}
+                      {selectedReport.chatType === "group"
+                        ? "Групп"
+                        : "Хувийн"}
                     </p>
 
                     {selectedReport.chatType === "group" &&
                       selectedReport.roomName && (
                         <p>
-                          <strong>Group:</strong> {selectedReport.roomName}
+                          <strong>Групп:</strong> {selectedReport.roomName}
                         </p>
                       )}
 

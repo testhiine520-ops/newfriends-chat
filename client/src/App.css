@@ -325,46 +325,46 @@ body {
 }
 
 /* =========================================================
-   LOGIN PAGE — LIGHT (modern template шиг, ногоон accent)
+   LOGIN PAGE — DARK (default, modern template хар + violet)
 ========================================================= */
 .home-page {
-  background: linear-gradient(160deg, #eef0f4 0%, #e6eaf0 100%) !important;
-  color: #1e2939 !important;
+  background: linear-gradient(160deg, #0a0a0d 0%, #111018 100%) !important;
+  color: #e4e4e7 !important;
 }
 .home-page .auth-card,
 .home-page .compact-auth-card {
-  background: #ffffff !important;
-  border: 1px solid #eceef2 !important;
-  box-shadow: 0 20px 50px rgba(16, 24, 40, 0.1) !important;
+  background: #18181d !important;
+  border: 1px solid #28282f !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: none !important;
 }
-.home-page .auth-card h1 { color: #0f1729 !important; }
-.home-page .auth-subtitle { color: #5b6573 !important; }
-.home-page .auth-form label { color: #1e2939 !important; }
+.home-page .auth-card h1 { color: #ffffff !important; }
+.home-page .auth-subtitle { color: #a1a1aa !important; }
+.home-page .auth-form label { color: #e4e4e7 !important; }
 .home-page .auth-form input {
-  background: #f4f6f9 !important;
-  border: 1px solid #dde1e7 !important;
-  color: #1e2939 !important;
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
 }
-.home-page .auth-form input::placeholder { color: #aab2bf !important; }
+.home-page .auth-form input::placeholder { color: #71717a !important; }
 .home-page .auth-form input:focus {
-  border-color: #10b981 !important;
-  background: #ffffff !important;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18) !important;
+  border-color: #7c5cff !important;
+  background: #1b1b22 !important;
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.22) !important;
 }
 .home-page .auth-main-btn {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3) !important;
+  background: linear-gradient(135deg, #7c5cff, #6d4ee6) !important;
+  box-shadow: 0 12px 24px rgba(124, 92, 255, 0.3) !important;
 }
 .home-page .auth-switch-btn {
-  background: #f6f8fa !important;
-  border: 1px solid #dde1e7 !important;
-  color: #047857 !important;
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #b9a8ff !important;
 }
-.home-page .auth-switch-btn:hover { background: #ecfdf5 !important; }
+.home-page .auth-switch-btn:hover { background: #232331 !important; }
 .home-page .home-admin-btn {
-  background: #10b981 !important;
-  border: 1px solid #a7f3d0 !important;
+  background: #7c5cff !important;
+  border: 1px solid #3a2f5e !important;
   color: #ffffff !important;
 }
-.home-page .home-admin-btn:hover { background: #059669 !important; }
+.home-page .home-admin-btn:hover { background: #6d4ee6 !important; }
