@@ -30,6 +30,8 @@ export default function AdminPage() {
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
+  const [adminTheme, setAdminTheme] = useState("light");
+
   const [authMode, setAuthMode] = useState("login"); // "login" | "register"
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
@@ -323,13 +325,23 @@ export default function AdminPage() {
     const isRegister = authMode === "register";
 
     return (
-      <div className="admin-login-page">
+      <div className={`admin-login-page ${adminTheme === "light" ? "admin-light" : ""}`}>
         <button
           type="button"
           className="admin-back-btn"
           onClick={() => navigate("/")}
         >
           ← Буцах
+        </button>
+
+        <button
+          type="button"
+          className="admin-theme-toggle"
+          onClick={() =>
+            setAdminTheme((prev) => (prev === "light" ? "dark" : "light"))
+          }
+        >
+          {adminTheme === "light" ? "🌙 Бараан горим" : "☀️ Гэрэлтэй горим"}
         </button>
 
         <div className="admin-login-card">
@@ -402,7 +414,7 @@ export default function AdminPage() {
   ========================= */
 
   return (
-    <div className="admin-page">
+    <div className={`admin-page ${adminTheme === "light" ? "admin-light" : ""}`}>
       <aside className="admin-sidebar">
         <h2>Admin</h2>
         <p>Report Center</p>
@@ -445,6 +457,16 @@ export default function AdminPage() {
           </div>
 
           <div className="admin-header-actions">
+            <button
+              type="button"
+              className="admin-header-btn admin-header-theme"
+              onClick={() =>
+                setAdminTheme((prev) => (prev === "light" ? "dark" : "light"))
+              }
+            >
+              {adminTheme === "light" ? "🌙 Бараан" : "☀️ Гэрэлтэй"}
+            </button>
+
             <button
               type="button"
               className="admin-header-btn"

@@ -84,12 +84,12 @@
 
 .admin-login-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #061827 0%, #08213a 100%);
+  background: linear-gradient(135deg, #eef2f8 0%, #e2e8f3 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  color: white;
+  color: #1e293b;
   position: relative;
 }
 
@@ -97,9 +97,9 @@
   position: fixed;
   top: 24px;
   left: 24px;
-  border: 1px solid rgba(147, 197, 253, 0.45);
-  background: rgba(15, 42, 74, 0.9);
-  color: white;
+  border: 1px solid #c7d2fe;
+  background: #ffffff;
+  color: #1f1a6c;
   padding: 12px 18px;
   border-radius: 14px;
   font-weight: 900;
@@ -109,21 +109,22 @@
 .admin-login-card {
   width: 100%;
   max-width: 420px;
-  background: rgba(13, 40, 70, 0.94);
-  border: 1px solid rgba(96, 165, 250, 0.32);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 24px;
   padding: 30px;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 28px 80px rgba(30, 41, 59, 0.15);
 }
 
 .admin-login-card h1 {
   margin: 0 0 10px;
   font-size: 34px;
   font-weight: 900;
+  color: #1f1a6c;
 }
 
 .admin-login-card p {
-  color: #cbd5e1;
+  color: #475569;
   line-height: 1.45;
   margin-bottom: 22px;
 }
@@ -136,12 +137,15 @@
 
 .admin-login-form label {
   font-weight: 800;
+  color: #1e293b;
 }
 
 .admin-login-form input {
   height: 52px;
   border-radius: 14px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid #cbd5e1;
+  background: #f1f5fb;
+  color: #1e293b;
   padding: 0 16px;
   font-size: 16px;
   outline: none;
@@ -180,7 +184,7 @@
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
-  background: rgba(15, 35, 60, 0.6);
+  background: #eef2f8;
   padding: 6px;
   border-radius: 14px;
 }
@@ -191,7 +195,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: #9fc0e8;
+  color: #64748b;
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
@@ -629,4 +633,142 @@
 
 .report-delete-btn:hover {
   background: #b91c1c;
+}
+
+/* =========================================================
+   ADMIN THEME TOGGLE + LIGHT MODE (modern template шиг)
+   Accent: #10b981 emerald
+========================================================= */
+
+/* Toggle buttons */
+.admin-theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 50;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #2e5f94;
+  background: #12375c;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-theme-toggle:hover { background: #1d4ed8; }
+
+.admin-header-theme {
+  background: #12375c !important;
+}
+
+/* ---------- LIGHT MODE ---------- */
+.admin-login-page.admin-light {
+  background: linear-gradient(160deg, #eef0f4 0%, #e6eaf0 100%) !important;
+  color: #1e2939 !important;
+}
+.admin-login-page.admin-light .admin-back-btn,
+.admin-login-page.admin-light .admin-theme-toggle {
+  background: #ffffff !important;
+  border: 1px solid #dde1e7 !important;
+  color: #1e2939 !important;
+}
+.admin-login-page.admin-light .admin-login-card {
+  background: #ffffff !important;
+  border: 1px solid #eceef2 !important;
+  box-shadow: 0 20px 50px rgba(16, 24, 40, 0.1) !important;
+}
+.admin-login-page.admin-light .admin-login-card h1 { color: #0f1729 !important; }
+.admin-login-page.admin-light .admin-login-card p { color: #5b6573 !important; }
+.admin-login-page.admin-light .admin-auth-tabs { background: #f4f6f9 !important; }
+.admin-login-page.admin-light .admin-auth-tab { color: #5b6573 !important; }
+.admin-login-page.admin-light .admin-auth-tab.active {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+.admin-login-page.admin-light .admin-login-form label { color: #1e2939 !important; }
+.admin-login-page.admin-light .admin-login-form input {
+  background: #f4f6f9 !important;
+  border: 1px solid #dde1e7 !important;
+  color: #1e2939 !important;
+}
+.admin-login-page.admin-light .admin-login-form button {
+  background: #10b981 !important;
+}
+
+/* Dashboard light */
+.admin-page.admin-light {
+  background: #eef0f4 !important;
+  color: #1e2939 !important;
+}
+.admin-page.admin-light .admin-sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid #eceef2 !important;
+}
+.admin-page.admin-light .admin-sidebar h2 { color: #0f1729 !important; }
+.admin-page.admin-light .admin-sidebar p { color: #059669 !important; }
+.admin-page.admin-light .admin-banned-title { color: #0f1729 !important; }
+.admin-page.admin-light .admin-banned-empty { color: #aab2bf !important; }
+.admin-page.admin-light .admin-banned-item {
+  background: #f6f8fa !important;
+  border: 1px solid #eceef2 !important;
+}
+.admin-page.admin-light .admin-banned-info,
+.admin-page.admin-light .admin-banned-info strong { color: #1e2939 !important; }
+.admin-page.admin-light .admin-main { background: #eef0f4 !important; }
+.admin-page.admin-light .admin-header h1 { color: #0f1729 !important; }
+.admin-page.admin-light .admin-header p { color: #5b6573 !important; }
+.admin-page.admin-light .admin-header-btn {
+  background: #ffffff !important;
+  border: 1px solid #dde1e7 !important;
+  color: #1e2939 !important;
+}
+.admin-page.admin-light .admin-header-theme { background: #ecfdf5 !important; color: #047857 !important; }
+.admin-page.admin-light .admin-header-logout {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+.admin-page.admin-light .report-list-panel,
+.admin-page.admin-light .report-detail-panel {
+  background: #ffffff !important;
+  border: 1px solid #eceef2 !important;
+  box-shadow: 0 4px 20px rgba(16, 24, 40, 0.05) !important;
+}
+.admin-page.admin-light .report-list-item {
+  background: #f6f8fa !important;
+  border: 1px solid #eceef2 !important;
+  color: #1e2939 !important;
+}
+.admin-page.admin-light .report-list-item.active,
+.admin-page.admin-light .report-list-item:hover {
+  background: #ecfdf5 !important;
+  border-color: #10b981 !important;
+}
+.admin-page.admin-light .report-list-item strong { color: #1e2939 !important; }
+.admin-page.admin-light .report-list-item p,
+.admin-page.admin-light .report-list-item small { color: #8b94a3 !important; }
+.admin-page.admin-light .report-detail-card,
+.admin-page.admin-light .report-detail-card strong,
+.admin-page.admin-light .report-detail-top { color: #1e2939 !important; }
+.admin-page.admin-light .report-detail-card {
+  background: #f6f8fa !important;
+  border: 1px solid #eceef2 !important;
+}
+.admin-page.admin-light .report-detail-card h2 { color: #0f1729 !important; }
+.admin-page.admin-light .report-message-box {
+  background: #f6f8fa !important;
+  border: 1px solid #eceef2 !important;
+}
+.admin-page.admin-light .admin-message-item {
+  background: #ffffff !important;
+  border: 1px solid #eceef2 !important;
+  color: #1e2939 !important;
+}
+.admin-page.admin-light .admin-empty,
+.admin-page.admin-light .admin-empty-small { color: #8b94a3 !important; }
+.admin-page.admin-light .admin-action-msg {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
 }

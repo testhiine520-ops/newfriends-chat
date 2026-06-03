@@ -244,6 +244,12 @@ export default function ChatPage() {
   const [showMembers, setShowMembers] = useState(false);
 
   /* =========================
+     THEME (light default, toggle to dark)
+  ========================= */
+
+  const [theme, setTheme] = useState("light");
+
+  /* =========================
      MEDIA STATE
   ========================= */
 
@@ -1122,7 +1128,20 @@ const handleInputKeyDown = (event) => {
 
   const renderSidebar = () => (
     <aside className="sidebar">
-      <h2>Newfriends.com</h2>
+      <div className="sidebar-brand-row">
+        <h2 className="sidebar-brand">Newfriends.com</h2>
+
+        <button
+          type="button"
+          className="theme-toggle-btn"
+          onClick={() =>
+            setTheme((prev) => (prev === "light" ? "dark" : "light"))
+          }
+          title={theme === "light" ? "Бараан горим" : "Гэрэлтэй горим"}
+        >
+          {theme === "light" ? "🌙 Бараан горим" : "☀️ Гэрэлтэй горим"}
+        </button>
+      </div>
 
       <div className="cat-row"></div>
 
@@ -1272,7 +1291,7 @@ const renderChatHeader = () => {
               className="members-toggle-btn"
               onClick={() => setShowMembers((prev) => !prev)}
             >
-              Гишүүд (
+              👥 Гишүүд (
               {(selectedRoom.users || []).filter((u) => u !== myName).length +
                 1}
               )
@@ -1645,7 +1664,7 @@ const renderChatHeader = () => {
   ========================= */
 
   return (
-    <div className="chat-page">
+    <div className={`chat-page ${theme === "light" ? "light-mode" : ""}`}>
       {renderSidebar()}
 
       <main className="chat-section">
