@@ -18,6 +18,9 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
+// Admin бүртгүүлэхэд шаардах нууц код
+const ADMIN_REGISTER_CODE = process.env.ADMIN_REGISTER_CODE || "4895126";
+
 app.use(
   cors({
     origin: CLIENT_URL,
@@ -370,11 +373,20 @@ app.post("/api/register", async (req, res) => {
   try {
     const username = String(req.body.username || "").trim();
     const password = String(req.body.password || "");
+    const securityQuestion = String(req.body.securityQuestion || "").trim();
+    const securityAnswer = String(req.body.securityAnswer || "").trim();
 
     if (!username || !password) {
       return res.status(400).json({
         ok: false,
         message: "Нэр болон нууц үг хэрэгтэй.",
+      });
+    }
+
+    if (!securityQuestion || !securityAnswer) {
+      return res.status(400).json({
+        ok: false,
+        message: "Нууц үг сэргээх асуулт болон хариулт хэрэгтэй.",
       });
     }
 
@@ -413,6 +425,8 @@ app.post("/api/register", async (req, res) => {
 
     const salt = createSalt();
     const passwordHash = hashPassword(password, salt);
+    const answerSalt = createSalt();
+    const answerHash = hashPassword(securityAnswer.toLowerCase(), answerSalt);
 
     const newUser = {
       id: createId(),
@@ -420,6 +434,9 @@ app.post("/api/register", async (req, res) => {
       usernameLower,
       salt,
       passwordHash,
+      securityQuestion,
+      answerSalt,
+      answerHash,
       savedChats: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -436,6 +453,9 @@ app.post("/api/register", async (req, res) => {
         usernameLower: newUser.usernameLower,
         salt: newUser.salt,
         passwordHash: newUser.passwordHash,
+        securityQuestion: newUser.securityQuestion,
+        answerSalt: newUser.answerSalt,
+        answerHash: newUser.answerHash,
         savedChats: [],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -563,10 +583,171 @@ app.post("/api/login", async (req, res) => {
     });
   }
 });
+
 /* =========================
-   SAVED PRIVATE CHATS API
-   ❤️ дарахад л хадгална
+   PASSWORD RECOVERY / CHANGE API
 ========================= */
+
+// Хэрэглэгчийг JSON эсвэл Mongo-оос олох туслах
+async function findUserByName(usernameLower) {
+  if (usersCollection) {
+    const u = await usersCollection.findOne({ usernameLower });
+    if (u && u.salt) return { source: "mongo", user: u };
+  }
+  const users = readUsers();
+  const idx = users.findIndex(
+    (u) => String(u.username || "").toLowerCase() === usernameLower
+  );
+  if (idx !== -1) return { source: "json", user: users[idx], idx, users };
+  return null;
+}
+
+// Хэрэглэгчийн нууц үгийг шинэчлэх (JSON + Mongo хоёуланд)
+// Security answer нь тусдаа answerSalt-тай тул нууц үг солиход нөлөөлөхгүй
+async function updateUserPassword(usernameLower, newPassword) {
+  const salt = createSalt();
+  const passwordHash = hashPassword(newPassword, salt);
+
+  const users = readUsers();
+  const idx = users.findIndex(
+    (u) => String(u.username || "").toLowerCase() === usernameLower
+  );
+  if (idx !== -1) {
+    users[idx].salt = salt;
+    users[idx].passwordHash = passwordHash;
+    users[idx].updatedAt = new Date().toISOString();
+    writeUsers(users);
+  }
+
+  if (usersCollection) {
+    await usersCollection.updateOne(
+      { usernameLower },
+      { $set: { salt, passwordHash, updatedAt: new Date() } }
+    );
+  }
+}
+
+// 1) Нэр оруулаад security асуултыг авах
+app.post("/api/recover/question", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    if (!username) {
+      return res.status(400).json({ ok: false, message: "Нэр хэрэгтэй." });
+    }
+
+    const found = await findUserByName(username.toLowerCase());
+    if (!found || !found.user.securityQuestion) {
+      return res.status(404).json({
+        ok: false,
+        message: "Энэ нэр олдсонгүй эсвэл сэргээх асуулт тохируулаагүй байна.",
+      });
+    }
+
+    res.json({
+      ok: true,
+      securityQuestion: found.user.securityQuestion,
+    });
+  } catch (err) {
+    console.error("Recover question error:", err);
+    res.status(500).json({ ok: false, message: "Алдаа гарлаа." });
+  }
+});
+
+// 2) Хариулт шалгаад шинэ нууц үг тавих
+app.post("/api/recover/reset", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const answer = String(req.body.securityAnswer || "").trim();
+    const newPassword = String(req.body.newPassword || "");
+
+    if (!username || !answer || !newPassword) {
+      return res.status(400).json({
+        ok: false,
+        message: "Нэр, хариулт, шинэ нууц үг бүгд хэрэгтэй.",
+      });
+    }
+
+    if (newPassword.length < 4) {
+      return res.status(400).json({
+        ok: false,
+        message: "Шинэ нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.",
+      });
+    }
+
+    const found = await findUserByName(username.toLowerCase());
+    if (!found || !found.user.answerHash) {
+      return res.status(404).json({
+        ok: false,
+        message: "Энэ нэр олдсонгүй.",
+      });
+    }
+
+    const checkAnswer = hashPassword(
+      answer.toLowerCase(),
+      found.user.answerSalt || found.user.salt
+    );
+    if (checkAnswer !== found.user.answerHash) {
+      return res.status(401).json({
+        ok: false,
+        message: "Хариулт буруу байна.",
+      });
+    }
+
+    await updateUserPassword(username.toLowerCase(), newPassword);
+
+    res.json({
+      ok: true,
+      message: "Нууц үг амжилттай шинэчлэгдлээ. Одоо нэвтэрнэ үү.",
+    });
+  } catch (err) {
+    console.error("Recover reset error:", err);
+    res.status(500).json({ ok: false, message: "Алдаа гарлаа." });
+  }
+});
+
+// 3) Нэвтэрсэн үед нууц үг солих (хуучныг мэдэж байх)
+app.post("/api/change-password", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const oldPassword = String(req.body.oldPassword || "");
+    const newPassword = String(req.body.newPassword || "");
+
+    if (!username || !oldPassword || !newPassword) {
+      return res.status(400).json({
+        ok: false,
+        message: "Нэр, хуучин болон шинэ нууц үг хэрэгтэй.",
+      });
+    }
+
+    if (newPassword.length < 4) {
+      return res.status(400).json({
+        ok: false,
+        message: "Шинэ нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.",
+      });
+    }
+
+    const found = await findUserByName(username.toLowerCase());
+    if (!found) {
+      return res.status(404).json({ ok: false, message: "Нэр олдсонгүй." });
+    }
+
+    const checkHash = hashPassword(oldPassword, found.user.salt);
+    if (checkHash !== found.user.passwordHash) {
+      return res.status(401).json({
+        ok: false,
+        message: "Хуучин нууц үг буруу байна.",
+      });
+    }
+
+    await updateUserPassword(username.toLowerCase(), newPassword);
+
+    res.json({ ok: true, message: "Нууц үг амжилттай солигдлоо." });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ ok: false, message: "Алдаа гарлаа." });
+  }
+});
+
 
 /* =========================
    RECENT CHATS API
@@ -1204,11 +1385,19 @@ app.post("/api/admin/register", async (req, res) => {
   try {
     const username = String(req.body.username || "").trim();
     const password = String(req.body.password || "");
+    const adminCode = String(req.body.adminCode || "").trim();
 
     if (!username || !password) {
       return res.status(400).json({
         ok: false,
         message: "Admin нэр болон нууц үг хэрэгтэй.",
+      });
+    }
+
+    if (adminCode !== ADMIN_REGISTER_CODE) {
+      return res.status(403).json({
+        ok: false,
+        message: "Admin нууц код буруу байна.",
       });
     }
 
@@ -1305,6 +1494,110 @@ app.post("/api/admin/login", async (req, res) => {
       ok: false,
       message: "Admin нэвтрэх үед алдаа гарлаа.",
     });
+  }
+});
+
+// Admin нууц үг солих (хуучныг мэдэж байх)
+app.post("/api/admin/change-password", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const oldPassword = String(req.body.oldPassword || "");
+    const newPassword = String(req.body.newPassword || "");
+
+    if (!username || !oldPassword || !newPassword) {
+      return res.status(400).json({
+        ok: false,
+        message: "Нэр, хуучин болон шинэ нууц үг хэрэгтэй.",
+      });
+    }
+
+    if (newPassword.length < 4) {
+      return res.status(400).json({
+        ok: false,
+        message: "Шинэ нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.",
+      });
+    }
+
+    const admins = readAdmins();
+    const idx = admins.findIndex(
+      (a) => String(a.username).toLowerCase() === username.toLowerCase()
+    );
+
+    if (idx === -1) {
+      return res.status(404).json({ ok: false, message: "Admin олдсонгүй." });
+    }
+
+    const checkHash = hashPassword(oldPassword, admins[idx].salt);
+    if (checkHash !== admins[idx].passwordHash) {
+      return res.status(401).json({
+        ok: false,
+        message: "Хуучин нууц үг буруу байна.",
+      });
+    }
+
+    const salt = createSalt();
+    admins[idx].salt = salt;
+    admins[idx].passwordHash = hashPassword(newPassword, salt);
+    admins[idx].updatedAt = new Date().toISOString();
+    writeAdmins(admins);
+
+    res.json({ ok: true, message: "Admin нууц үг амжилттай солигдлоо." });
+  } catch (err) {
+    console.error("Admin change password error:", err);
+    res.status(500).json({ ok: false, message: "Алдаа гарлаа." });
+  }
+});
+
+// Admin нууц үг сэргээх — нууц кодоор (мартсан үед)
+app.post("/api/admin/recover", async (req, res) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const adminCode = String(req.body.adminCode || "").trim();
+    const newPassword = String(req.body.newPassword || "");
+
+    if (!username || !adminCode || !newPassword) {
+      return res.status(400).json({
+        ok: false,
+        message: "Нэр, нууц код, шинэ нууц үг бүгд хэрэгтэй.",
+      });
+    }
+
+    if (adminCode !== ADMIN_REGISTER_CODE) {
+      return res.status(403).json({
+        ok: false,
+        message: "Admin нууц код буруу байна.",
+      });
+    }
+
+    if (newPassword.length < 4) {
+      return res.status(400).json({
+        ok: false,
+        message: "Шинэ нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.",
+      });
+    }
+
+    const admins = readAdmins();
+    const idx = admins.findIndex(
+      (a) => String(a.username).toLowerCase() === username.toLowerCase()
+    );
+
+    if (idx === -1) {
+      return res.status(404).json({ ok: false, message: "Admin олдсонгүй." });
+    }
+
+    const salt = createSalt();
+    admins[idx].salt = salt;
+    admins[idx].passwordHash = hashPassword(newPassword, salt);
+    admins[idx].updatedAt = new Date().toISOString();
+    writeAdmins(admins);
+
+    res.json({
+      ok: true,
+      message: "Admin нууц үг шинэчлэгдлээ. Одоо нэвтэрнэ үү.",
+    });
+  } catch (err) {
+    console.error("Admin recover error:", err);
+    res.status(500).json({ ok: false, message: "Алдаа гарлаа." });
   }
 });
 

@@ -3514,3 +3514,83 @@ body,
   border: 1px solid #a7f3d0 !important;
   color: #047857 !important;
 }
+
+/* =========================================================
+   CHANGE PASSWORD button + modal messages
+========================================================= */
+.change-pw-btn {
+  width: 100% !important;
+  height: 48px !important;
+  margin-top: 12px !important;
+  border-radius: 14px !important;
+  border: 1px solid #34343d !important;
+  background: #1b1b22 !important;
+  color: #d4d4d8 !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  transition: background 0.15s !important;
+}
+.change-pw-btn:hover {
+  background: #232331 !important;
+}
+.chat-page.light-mode .change-pw-btn {
+  background: #f6f8fa !important;
+  border: 1px solid #dde1e7 !important;
+  color: #1e2939 !important;
+}
+.chat-page.light-mode .change-pw-btn:hover {
+  background: #ecfdf5 !important;
+}
+
+/* Modal error / success messages */
+.pw-modal-error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pw-modal-success {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+  font-size: 13px;
+  font-weight: 700;
+}
+.chat-page.light-mode .pw-modal-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.chat-page.light-mode .pw-modal-success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+/* Modal input (reuse report-modal-field styling) */
+.report-modal-field input {
+  width: 100%;
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid #34343d;
+  background: #1b1b22;
+  color: #e4e4e7;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+.report-modal-field input::placeholder { color: #71717a; }
+.chat-page.light-mode .report-modal-field input {
+  background: #f4f6f9;
+  border: 1px solid #dde1e7;
+  color: #1e2939;
+}

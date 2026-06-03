@@ -95,5 +95,19 @@
     "createdAt": "2026-06-02T09:05:16.119Z",
     "updatedAt": "2026-06-02T09:05:16.119Z",
     "lastChatAt": null
+  },
+  {
+    "id": "1780504943770-42zpogqc7xc",
+    "username": "nuutsug",
+    "usernameLower": "nuutsug",
+    "salt": "d0d5d36ee2254388d576c636e314f7cc",
+    "passwordHash": "aa595970376b63fad96fde9f407b8086dd49036236d53ff9ad93c1437f80643bf8e03cc38901f9b24759544a5d95af6ab144ae00d9cb03de1737b7eb022d8dac",
+    "securityQuestion": "Таны төрсөн хот хаана вэ?",
+    "answerSalt": "ed5c301342de1930b52d7125df079d9d",
+    "answerHash": "1b52ef222f6d45282e2208f94294daeeba7359c5d02dd5b14088d2fdcfeda86061a3f0797a235ba1b8c016170b3e3a2459ba772902814a4feedf6342936c969f",
+    "savedChats": [],
+    "createdAt": "2026-06-03T16:42:23.770Z",
+    "updatedAt": "2026-06-03T16:44:26.101Z",
+    "lastChatAt": null
   }
 ]

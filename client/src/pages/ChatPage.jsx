@@ -250,6 +250,67 @@ export default function ChatPage() {
   const [theme, setTheme] = useState("dark");
 
   /* =========================
+     CHANGE PASSWORD MODAL
+  ========================= */
+
+  const [showPwModal, setShowPwModal] = useState(false);
+  const [pwOld, setPwOld] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwMsg, setPwMsg] = useState("");
+  const [pwErr, setPwErr] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const closePwModal = () => {
+    setShowPwModal(false);
+    setPwOld("");
+    setPwNew("");
+    setPwMsg("");
+    setPwErr("");
+  };
+
+  const handleChangePassword = async () => {
+    setPwErr("");
+    setPwMsg("");
+
+    if (!pwOld.trim() || !pwNew.trim()) {
+      setPwErr("Хуучин болон шинэ нууц үгээ оруулна уу.");
+      return;
+    }
+    if (pwNew.trim().length < 4) {
+      setPwErr("Шинэ нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.");
+      return;
+    }
+
+    setPwLoading(true);
+    try {
+      const response = await fetch(`${SERVER_URL}/api/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: myName,
+          oldPassword: pwOld,
+          newPassword: pwNew.trim(),
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        setPwErr(data.message || "Нууц үг солих үед алдаа гарлаа.");
+        return;
+      }
+
+      setPwMsg(data.message || "Нууц үг амжилттай солигдлоо.");
+      setPwOld("");
+      setPwNew("");
+    } catch (err) {
+      console.error("Change password error:", err);
+      setPwErr("Server-тэй холбогдож чадсангүй.");
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  /* =========================
      MEDIA STATE
   ========================= */
 
@@ -1251,6 +1312,14 @@ const handleInputKeyDown = (event) => {
         </div>
       </div>
 
+      <button
+        type="button"
+        className="change-pw-btn"
+        onClick={() => setShowPwModal(true)}
+      >
+        🔑 Нууц үг солих
+      </button>
+
       <button type="button" className="logout-btn" onClick={handleLogout}>
         Гарах
       </button>
@@ -1746,6 +1815,65 @@ const renderChatHeader = () => {
                 }
               >
                 {reportSending ? "Илгээж байна..." : "Report илгээх"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPwModal && (
+        <div className="report-modal-overlay" onClick={closePwModal}>
+          <div
+            className="report-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="report-modal-title">Нууц үг солих</h2>
+
+            <p className="report-modal-sub">
+              Хуучин нууц үгээ оруулж, шинэ нууц үгээ тохируулна уу.
+            </p>
+
+            <div className="report-modal-field">
+              <label>Хуучин нууц үг</label>
+              <input
+                type="password"
+                value={pwOld}
+                onChange={(event) => setPwOld(event.target.value)}
+                placeholder="Хуучин нууц үг"
+                autoComplete="current-password"
+              />
+            </div>
+
+            <div className="report-modal-field">
+              <label>Шинэ нууц үг</label>
+              <input
+                type="password"
+                value={pwNew}
+                onChange={(event) => setPwNew(event.target.value)}
+                placeholder="Шинэ нууц үг (4+ тэмдэгт)"
+                autoComplete="new-password"
+              />
+            </div>
+
+            {pwErr && <div className="pw-modal-error">{pwErr}</div>}
+            {pwMsg && <div className="pw-modal-success">{pwMsg}</div>}
+
+            <div className="report-modal-actions">
+              <button
+                type="button"
+                className="report-modal-cancel"
+                onClick={closePwModal}
+              >
+                Хаах
+              </button>
+
+              <button
+                type="button"
+                className="report-modal-submit"
+                onClick={handleChangePassword}
+                disabled={pwLoading}
+              >
+                {pwLoading ? "Солиж байна..." : "Нууц үг солих"}
               </button>
             </div>
           </div>

@@ -368,3 +368,53 @@ body {
   color: #ffffff !important;
 }
 .home-page .home-admin-btn:hover { background: #6d4ee6 !important; }
+
+/* =========================================================
+   PASSWORD RECOVERY UI (select, recover-question, forgot link)
+========================================================= */
+.auth-form .auth-select {
+  width: 100%;
+  height: 54px;
+  border-radius: 15px;
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+.recover-question {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.auth-forgot-btn {
+  margin-top: 10px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* DARK (default) */
+.home-page .auth-select {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+.home-page .recover-question {
+  background: #1b1b22 !important;
+  border: 1px solid #34343d !important;
+  color: #e4e4e7 !important;
+}
+.home-page .auth-forgot-btn {
+  color: #b9a8ff !important;
+}
+.home-page .auth-forgot-btn:hover {
+  color: #d8ccff !important;
+  text-decoration: underline;
+}

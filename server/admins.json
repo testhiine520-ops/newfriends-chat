@@ -6,5 +6,14 @@
     "salt": "c6c80aae511cf4a3cf966e4ef120e131",
     "passwordHash": "159f743cfa0fd11502b1acc17885c061cf7c09daaa65294fb969c94be27b7f3b6c853826d6cab2da621f91361020a4157525bb8cd1daa20931af7f34fa1ffdb2",
     "createdAt": "2026-06-02T10:58:55.598Z"
+  },
+  {
+    "id": "1780505956883-0ycu1ue7hmye",
+    "username": "admin",
+    "usernameLower": "admin",
+    "salt": "c166701851be8328f60c3bada3c74595",
+    "passwordHash": "e644f95afa64bc1e33519c6ea5ee7741bf552f5b11d2789c36b6a160dc70a7a4b5663d65f98762e1688b3c5b542bfadaf9c0bad986a596790e2b0df3f43963d3",
+    "createdAt": "2026-06-03T16:59:16.883Z",
+    "updatedAt": "2026-06-03T17:00:11.005Z"
   }
 ]

@@ -32,12 +32,25 @@ export default function AdminPage() {
 
   const [adminTheme, setAdminTheme] = useState("dark");
 
-  const [authMode, setAuthMode] = useState("login"); // "login" | "register"
+  const [authMode, setAuthMode] = useState("login"); // "login" | "register" | "recover"
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
+  const [adminCode, setAdminCode] = useState("");
   const [adminError, setAdminError] = useState("");
   const [adminSuccess, setAdminSuccess] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+  const [recoverNewPw, setRecoverNewPw] = useState("");
+
+  // Нэвтэрсэн admin-ийн нэр (нууц үг солиход хэрэгтэй)
+  const [loggedAdminName, setLoggedAdminName] = useState("");
+
+  // Нууц үг солих modal
+  const [showAdminPwModal, setShowAdminPwModal] = useState(false);
+  const [apwOld, setApwOld] = useState("");
+  const [apwNew, setApwNew] = useState("");
+  const [apwMsg, setApwMsg] = useState("");
+  const [apwErr, setApwErr] = useState("");
+  const [apwLoading, setApwLoading] = useState(false);
 
   /* =========================
      REPORT STATE
@@ -84,6 +97,7 @@ export default function AdminPage() {
 
       if (response.ok && data.ok) {
         setIsAdminLoggedIn(true);
+        setLoggedAdminName(data.username || username);
         setAdminError("");
         return;
       }
@@ -102,9 +116,15 @@ export default function AdminPage() {
 
     const username = adminUsername.trim();
     const password = adminPassword.trim();
+    const code = adminCode.trim();
 
     if (!username || !password) {
       setAdminError("Admin нэр болон нууц үг хэрэгтэй.");
+      return;
+    }
+
+    if (!code) {
+      setAdminError("Admin нууц код хэрэгтэй.");
       return;
     }
 
@@ -116,7 +136,7 @@ export default function AdminPage() {
       const response = await fetch(`${SERVER_URL}/api/admin/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, adminCode: code }),
       });
 
       const data = await response.json();
@@ -125,6 +145,7 @@ export default function AdminPage() {
         setAdminSuccess("Амжилттай бүртгэгдлээ. Одоо нэвтэрнэ үү.");
         setAuthMode("login");
         setAdminPassword("");
+        setAdminCode("");
         return;
       }
 
@@ -141,6 +162,108 @@ export default function AdminPage() {
     setAuthMode(mode);
     setAdminError("");
     setAdminSuccess("");
+    setAdminPassword("");
+    setAdminCode("");
+    setRecoverNewPw("");
+  };
+
+  // Мартсан үед нууц кодоор сэргээх
+  const handleAdminRecover = async (event) => {
+    event.preventDefault();
+
+    const username = adminUsername.trim();
+    const code = adminCode.trim();
+    const newPassword = recoverNewPw.trim();
+
+    if (!username || !code || !newPassword) {
+      setAdminError("Нэр, нууц код, шинэ нууц үг бүгд хэрэгтэй.");
+      return;
+    }
+
+    setAuthLoading(true);
+    setAdminError("");
+    setAdminSuccess("");
+
+    try {
+      const response = await fetch(`${SERVER_URL}/api/admin/recover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, adminCode: code, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        setAdminSuccess(data.message || "Нууц үг шинэчлэгдлээ. Нэвтэрнэ үү.");
+        setAuthMode("login");
+        setAdminPassword("");
+        setAdminCode("");
+        setRecoverNewPw("");
+        return;
+      }
+
+      setAdminError(data.message || "Сэргээх үед алдаа гарлаа.");
+    } catch (err) {
+      console.error("Admin recover error:", err);
+      setAdminError("Сервертэй холбогдоход алдаа гарлаа.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Нэвтэрсэн үед нууц үг солих
+  const closeAdminPwModal = () => {
+    setShowAdminPwModal(false);
+    setApwOld("");
+    setApwNew("");
+    setApwMsg("");
+    setApwErr("");
+  };
+
+  const handleAdminChangePassword = async () => {
+    setApwErr("");
+    setApwMsg("");
+
+    if (!apwOld.trim() || !apwNew.trim()) {
+      setApwErr("Хуучин болон шинэ нууц үгээ оруулна уу.");
+      return;
+    }
+    if (apwNew.trim().length < 4) {
+      setApwErr("Шинэ нууц үг хамгийн багадаа 4 тэмдэгт байх ёстой.");
+      return;
+    }
+
+    setApwLoading(true);
+    try {
+      const response = await fetch(
+        `${SERVER_URL}/api/admin/change-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: loggedAdminName,
+            oldPassword: apwOld,
+            newPassword: apwNew.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        setApwErr(data.message || "Нууц үг солих үед алдаа гарлаа.");
+        return;
+      }
+
+      setApwMsg(data.message || "Нууц үг амжилттай солигдлоо.");
+      setApwOld("");
+      setApwNew("");
+    } catch (err) {
+      console.error("Admin change password error:", err);
+      setApwErr("Сервертэй холбогдоход алдаа гарлаа.");
+    } finally {
+      setApwLoading(false);
+    }
   };
 
   const handleAdminLogout = () => {
@@ -323,6 +446,7 @@ export default function AdminPage() {
 
   if (!isAdminLoggedIn) {
     const isRegister = authMode === "register";
+    const isRecover = authMode === "recover";
 
     return (
       <div className={`admin-login-page ${adminTheme === "light" ? "admin-light" : ""}`}>
@@ -345,65 +469,147 @@ export default function AdminPage() {
         </button>
 
         <div className="admin-login-card">
-          <h1>{isRegister ? "Admin бүртгүүлэх" : "Admin нэвтрэх"}</h1>
+          <h1>
+            {isRecover
+              ? "Admin нууц үг сэргээх"
+              : isRegister
+              ? "Admin бүртгүүлэх"
+              : "Admin нэвтрэх"}
+          </h1>
 
           <p>
-            {isRegister
+            {isRecover
+              ? "Admin нууц кодоо оруулж шинэ нууц үг тохируулна уу."
+              : isRegister
               ? "Шинэ admin эрх үүсгэхийн тулд нэр, нууц үгээ оруулна уу."
               : "Report жагсаалтыг харахын тулд admin эрхээр нэвтэрнэ үү."}
           </p>
 
-          <div className="admin-auth-tabs">
+          {!isRecover && (
+            <div className="admin-auth-tabs">
+              <button
+                type="button"
+                className={`admin-auth-tab ${!isRegister ? "active" : ""}`}
+                onClick={() => switchAuthMode("login")}
+              >
+                Нэвтрэх
+              </button>
+              <button
+                type="button"
+                className={`admin-auth-tab ${isRegister ? "active" : ""}`}
+                onClick={() => switchAuthMode("register")}
+              >
+                Бүртгүүлэх
+              </button>
+            </div>
+          )}
+
+          {/* LOGIN / REGISTER FORM */}
+          {!isRecover && (
+            <form
+              className="admin-login-form"
+              onSubmit={isRegister ? handleAdminRegister : handleAdminLogin}
+            >
+              <label>Admin username</label>
+
+              <input
+                value={adminUsername}
+                onChange={(event) => setAdminUsername(event.target.value)}
+                placeholder="admin"
+              />
+
+              <label>Password</label>
+
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(event) => setAdminPassword(event.target.value)}
+                placeholder={isRegister ? "Шинэ нууц үг" : "Нууц үг"}
+              />
+
+              {isRegister && (
+                <>
+                  <label>Admin нууц код</label>
+                  <input
+                    type="password"
+                    value={adminCode}
+                    onChange={(event) => setAdminCode(event.target.value)}
+                    placeholder="Бүртгүүлэх нууц код"
+                  />
+                </>
+              )}
+
+              {adminError && <div className="admin-error">{adminError}</div>}
+              {adminSuccess && (
+                <div className="admin-success">{adminSuccess}</div>
+              )}
+
+              <button type="submit" disabled={authLoading}>
+                {authLoading
+                  ? "Түр хүлээнэ үү..."
+                  : isRegister
+                  ? "Бүртгүүлэх"
+                  : "Нэвтрэх"}
+              </button>
+            </form>
+          )}
+
+          {/* RECOVER FORM */}
+          {isRecover && (
+            <form className="admin-login-form" onSubmit={handleAdminRecover}>
+              <label>Admin username</label>
+              <input
+                value={adminUsername}
+                onChange={(event) => setAdminUsername(event.target.value)}
+                placeholder="admin"
+              />
+
+              <label>Admin нууц код</label>
+              <input
+                type="password"
+                value={adminCode}
+                onChange={(event) => setAdminCode(event.target.value)}
+                placeholder="Admin нууц код"
+              />
+
+              <label>Шинэ нууц үг</label>
+              <input
+                type="password"
+                value={recoverNewPw}
+                onChange={(event) => setRecoverNewPw(event.target.value)}
+                placeholder="Шинэ нууц үг (4+ тэмдэгт)"
+              />
+
+              {adminError && <div className="admin-error">{adminError}</div>}
+              {adminSuccess && (
+                <div className="admin-success">{adminSuccess}</div>
+              )}
+
+              <button type="submit" disabled={authLoading}>
+                {authLoading ? "Түр хүлээнэ үү..." : "Нууц үг шинэчлэх"}
+              </button>
+            </form>
+          )}
+
+          {/* FORGOT / BACK LINK */}
+          {authMode === "login" && (
             <button
               type="button"
-              className={`admin-auth-tab ${!isRegister ? "active" : ""}`}
+              className="admin-forgot-btn"
+              onClick={() => switchAuthMode("recover")}
+            >
+              Нууц үгээ мартсан уу?
+            </button>
+          )}
+          {isRecover && (
+            <button
+              type="button"
+              className="admin-forgot-btn"
               onClick={() => switchAuthMode("login")}
             >
-              Нэвтрэх
+              ← Нэвтрэх рүү буцах
             </button>
-            <button
-              type="button"
-              className={`admin-auth-tab ${isRegister ? "active" : ""}`}
-              onClick={() => switchAuthMode("register")}
-            >
-              Бүртгүүлэх
-            </button>
-          </div>
-
-          <form
-            className="admin-login-form"
-            onSubmit={isRegister ? handleAdminRegister : handleAdminLogin}
-          >
-            <label>Admin username</label>
-
-            <input
-              value={adminUsername}
-              onChange={(event) => setAdminUsername(event.target.value)}
-              placeholder="admin"
-            />
-
-            <label>Password</label>
-
-            <input
-              type="password"
-              value={adminPassword}
-              onChange={(event) => setAdminPassword(event.target.value)}
-              placeholder={isRegister ? "Шинэ нууц үг" : "Нууц үг"}
-            />
-
-            {adminError && <div className="admin-error">{adminError}</div>}
-            {adminSuccess && (
-              <div className="admin-success">{adminSuccess}</div>
-            )}
-
-            <button type="submit" disabled={authLoading}>
-              {authLoading
-                ? "Түр хүлээнэ үү..."
-                : isRegister
-                ? "Бүртгүүлэх"
-                : "Нэвтрэх"}
-            </button>
-          </form>
+          )}
         </div>
       </div>
     );
@@ -465,6 +671,14 @@ export default function AdminPage() {
               }
             >
               {adminTheme === "light" ? "🌙 Бараан" : "☀️ Гэрэлтэй"}
+            </button>
+
+            <button
+              type="button"
+              className="admin-header-btn"
+              onClick={() => setShowAdminPwModal(true)}
+            >
+              🔑 Нууц үг солих
             </button>
 
             <button
@@ -651,6 +865,61 @@ export default function AdminPage() {
           </section>
         </div>
       </main>
+
+      {showAdminPwModal && (
+        <div className="report-modal-overlay" onClick={closeAdminPwModal}>
+          <div
+            className="report-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="report-modal-title">Admin нууц үг солих</h2>
+            <p className="report-modal-sub">
+              Хуучин нууц үгээ оруулж, шинэ нууц үгээ тохируулна уу.
+            </p>
+
+            <div className="report-modal-field">
+              <label>Хуучин нууц үг</label>
+              <input
+                type="password"
+                value={apwOld}
+                onChange={(event) => setApwOld(event.target.value)}
+                placeholder="Хуучин нууц үг"
+              />
+            </div>
+
+            <div className="report-modal-field">
+              <label>Шинэ нууц үг</label>
+              <input
+                type="password"
+                value={apwNew}
+                onChange={(event) => setApwNew(event.target.value)}
+                placeholder="Шинэ нууц үг (4+ тэмдэгт)"
+              />
+            </div>
+
+            {apwErr && <div className="pw-modal-error">{apwErr}</div>}
+            {apwMsg && <div className="pw-modal-success">{apwMsg}</div>}
+
+            <div className="report-modal-actions">
+              <button
+                type="button"
+                className="report-modal-cancel"
+                onClick={closeAdminPwModal}
+              >
+                Хаах
+              </button>
+              <button
+                type="button"
+                className="report-modal-submit"
+                onClick={handleAdminChangePassword}
+                disabled={apwLoading}
+              >
+                {apwLoading ? "Солиж байна..." : "Нууц үг солих"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
